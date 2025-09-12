@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-12",
+  "features": {
+    "settings_modal": {
+      "name": "Settings Modal",
+      "description": "Modal dialog for application settings",
+      "status": "active",
+      "tests": [
+        "settings_button_opens_modal",
+        "modal_closes_with_x_button",
+        "modal_closes_with_close_button"
+      ],
+      "elements": ["#settings-btn", "#settings-modal", ".modal-close"],
+      "functions": ["openSettingsModal", "closeSettingsModal"],
+      "critical": true
+    },
+    "api_key_management": {
+      "name": "API Key Management",
+      "description": "Save, test and manage FlightAware API keys",
+      "status": "active",
+      "tests": [
+        "api_key_can_be_saved",
+        "api_key_test_shows_result",
+        "api_key_persists_in_localstorage"
+      ],
+      "elements": ["#api-key-input", "#save-api-key-btn", "#test-api-key-btn", "#api-key-status"],
+      "functions": ["testFlightAwareAPI"],
+      "critical": true
+    },
+    "flight_loading": {
+      "name": "Flight Data Loading",
+      "description": "Load and display flight data for airports",
+      "status": "active",
+      "tests": [
+        "airport_input_accepts_codes",
+        "enter_key_triggers_loading",
+        "flight_data_displays_in_table",
+        "mock_data_generates_correctly"
+      ],
+      "elements": ["#airport-input", "#start-monitoring-btn", "#flight-table"],
+      "functions": ["startFlightMonitoring", "generateMockFlightData", "displayFlights"],
+      "critical": true
+    },
+    "enhanced_flight_table": {
+      "name": "Enhanced Flight Table",
+      "description": "Professional flight table with 9 columns and styling",
+      "status": "active",
+      "tests": [
+        "table_has_9_columns",
+        "delay_calculation_works",
+        "status_badges_display",
+        "hover_effects_work"
+      ],
+      "elements": [".flight-table-enhanced", ".flight-row", ".delay-info", ".status-badge"],
+      "functions": ["generateFlightTable", "formatTime", "getTimeClass", "getStatusClass"],
+      "critical": true
+    },
+    "notifications_system": {
+      "name": "Browser Notifications",
+      "description": "Browser notification system with permission management",
+      "status": "active",
+      "tests": [
+        "permission_status_displays",
+        "test_notification_works",
+        "settings_persist"
+      ],
+      "elements": ["#enable-notifications", "#test-notification-btn", "#permission-status"],
+      "functions": ["initializeNotifications", "showNotification"],
+      "critical": false
+    },
+    "tab_system": {
+      "name": "Settings Tab System",
+      "description": "Tab navigation in settings modal",
+      "status": "active",
+      "tests": [
+        "tabs_switch_content",
+        "active_tab_highlighted",
+        "api_key_tab_default"
+      ],
+      "elements": [".tab-button", ".tab-content"],
+      "functions": ["showSettingsTab"],
+      "critical": false
+    }
+  }
+}

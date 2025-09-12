@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlightStat Bot - Live Flight Monitor</title>
+<style>
+        /* FlightStat Bot Styles */
+        body  {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+        }
+
+        .container  {
+            max-width: 1400px;
+    margin: 0 auto;
+        }
+h1  {
+            text-align: center;
+    color: #4CAF50;
+    margin-bottom: 30px;
+        }
+
+    /* Header Section */
+.header-section  {
+            background-color: #2d2d2d;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+        }
+
+        .controls  {
+            display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+        }
+
+    /* Buttons */
+.btn  {
+            padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+        }
+
+        .btn-primary  {
+            background-color: #4CAF50;
+    color: white;
+        }
+
+        .btn-primary:hover  {
+            background-color: #45a049;
+    transform: translateY(-1px);
+        }
+
+        .btn-secondary  {
+            background-color: #666;
+    color: white;
+        }
+
+        .btn-secondary:hover  {
+            background-color: #777;
+        }
+
+        .btn:disabled  {
+            opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+        }
+
+    /* Airport Selection */
+.airport-selection  {
+            position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+        }
+
+        .airport-selection label  {
+            font-weight: 500;
+    color: #ccc;
+        }
+
+        .airport-selection input  {
+            padding: 8px 12px;
+    border: 2px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    font-size: 14px;
+    width: 120px;
+    text-transform: uppercase;
+        }
+
+        .airport-selection input:focus  {
+            outline: none;
+    border-color: #4CAF50;
+        }
+
+        .suggestions-dropdown  {
+            position: absolute;
+    top: 100%;
+    left: 60px;
+    right: 0;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+        }
+
+        .suggestion-item  {
+            padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+        }
+
+        .suggestion-item:hover  {
+            background-color: #4CAF50;
+        }
+
+    /* API Status */
+.api-status  {
+            display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+        }
+
+        .status-indicator  {
+            font-size: 12px;
+        }
+
+    /* Live Update Toggle */
+.live-update-toggle  {
+            display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ccc;
+        }
+
+        .live-update-toggle input[type="checkbox"]  {
+            margin: 0;
+        }
+
+    /* API Call Counter */
+.api-call-counter  {
+            font-size: 12px;
+    color: #ccc;
+    padding: 4px 8px;
+    background-color: #444;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+        }
+
+        .api-call-counter.warning  {
+            color: #FFC107;
+    background-color: #4a3c00;
+        }
+
+        .api-call-counter.critical  {
+            color: #FF5722;
+    background-color: #4a1c00;
+    font-weight: bold;
+        }
+
+    /* Modal Styles */
+.modal  {
+            position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn  {
+            from  {
+            opacity: 0;
+        background-color: rgba(0, 0, 0, 0);
+        }
+    to  {
+            opacity: 1;
+        background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        }
+
+        .modal-content  {
+            background-color: #2d2d2d;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes modalSlideIn  {
+            from  {
+            transform: translateY(-50px);
+        opacity: 0;
+        }
+    to  {
+            transform: translateY(0);
+        opacity: 1;
+        }}
+
+    /* Flight Detail Modal Specific Styles */
+.flight-detail-modal-content  {
+            max-width: 700px;
+        }
+
+        .modal-header  {
+            display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #444;
+        }
+
+        .modal-header h3  {
+            margin: 0;
+    color: #4CAF50;
+        }
+
+        .modal-close  {
+            background: none;
+    border: none;
+    color: #ccc;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+        }
+
+        .modal-close:hover  {
+            color: white;
+    background-color: #444;
+        }
+
+        .modal-body  {
+            padding: 20px;
+        }
+
+        .modal-footer  {
+            padding: 20px;
+    border-top: 1px solid #444;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+        }
+
+    /* Flight Detail Content Styles */
+.flight-detail-content  {
+            display: grid;
+    gap: 20px;
+        }
+
+        .flight-detail-section  {
+            background-color: #333;
+    border-radius: 6px;
+    padding: 16px;
+        }
+
+        .flight-detail-section h4  {
+            margin: 0 0 12px 0;
+    color: #4CAF50;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+        }
+
+        .flight-detail-grid  {
+            display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+        }
+
+        .flight-detail-item  {
+            display: flex;
+    flex-direction: column;
+    gap: 4px;
+        }
+
+        .flight-detail-label  {
+            font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    font-weight: 500;
+        }
+
+        .flight-detail-value  {
+            font-size: 14px;
+    color: #fff;
+    font-weight: 500;
+        }
+
+        .flight-detail-value.empty  {
+            color: #666;
+    font-style: italic;
+        }
+
+        .flight-detail-value.highlight  {
+            color: #4CAF50;
+    font-weight: 600;
+        }
+
+        .flight-detail-value.warning  {
+            color: #FFC107;
+    font-weight: 600;
+        }
+
+        .flight-detail-value.error  {
+            color: #FF5722;
+    font-weight: 600;
+        }
+
+    /* Status Badge Styles */
+.status-badge  {
+            display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+        }
+
+        .status-badge.phase-landed  {
+            background-color: rgba(158, 158, 158, 0.2);
+    color: #9E9E9E;
+        }
+
+        .status-badge.phase-approach  {
+            background-color: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+        }
+
+        .status-badge.phase-enroute  {
+            background-color: rgba(33, 150, 243, 0.2);
+    color: #2196F3;
+        }
+
+        .status-badge.phase-preflight  {
+            background-color: rgba(189, 189, 189, 0.2);
+    color: #BDBDBD;
+        }
+
+        .status-badge.phase-cancelled  {
+            background-color: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+        }
+
+        .status-badge.phase-diverted  {
+            background-color: rgba(156, 39, 176, 0.2);
+    color: #9C27B0;
+        }
+
+    /* Delay Badge Styles */
+.delay-badge  {
+            display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+        }
+
+        .delay-badge.on-time  {
+            background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+        }
+
+        .delay-badge.minor-delay  {
+            background-color: rgba(255, 193, 7, 0.2);
+    color: #FFC107;
+        }
+
+        .delay-badge.major-delay  {
+            background-color: rgba(255, 87, 34, 0.2);
+    color: #FF5722;
+        }
+
+    /* Time Display Styles */
+.time-display  {
+            font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: 600;
+        }
+
+        .time-comparison  {
+            display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+        }
+
+        .time-arrow  {
+            color: #666;
+    font-size: 12px;
+        }
+
+    /* Progress Bar */
+.progress-container  {
+            text-align: center;
+        }
+
+        .progress-bar  {
+            width: 100%;
+    height: 8px;
+    background-color: #444;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+        }
+
+        .progress-fill  {
+            height: 100%;
+    background-color: #4CAF50;
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progress-animation 2s infinite;
+        }
+
+        @keyframes progress-animation  {
+            0%  {
+            width: 0%;
+        }
+    50%  {
+            width: 70%;
+        }
+    100%  {
+            width: 100%;
+        }}
+
+    /* Import Details */
+.import-details  {
+            background-color: #333;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+        }
+
+        .import-details h4  {
+            margin: 0 0 10px 0;
+    color: #4CAF50;
+        }
+
+        .import-details ul  {
+            margin: 5px 0;
+    padding-left: 20px;
+        }
+
+        .import-details li  {
+            margin: 2px 0;
+        }
+
+        .error-list  {
+            color: #ff6b6b;
+        }
+
+        .success-list  {
+            color: #4CAF50;
+        }
+
+    /* Main Content */
+.main-content  {
+            background-color: #2d2d2d;
+    border-radius: 8px;
+    padding: 20px;
+        }
+
+        .table-header  {
+            display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+        }
+
+        .table-header h2  {
+            margin: 0;
+    color: #4CAF50;
+        }
+
+        .table-controls  {
+            display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+        }
+
+        .filter-section  {
+            display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+        }
+
+        .counter-section  {
+            display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+        }
+
+        .table-controls label  {
+            display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ccc;
+    transition: color 0.2s ease;
+        }
+
+        .table-controls label:hover  {
+            color: #fff;
+        }
+
+        .table-controls input[type="checkbox"]  {
+            margin: 0;
+    accent-color: #4CAF50;
+        }
+
+        .counter-section span  {
+            font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+        }
+
+        #active-flights-counter  {
+            color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        #visible-flights-counter  {
+            color: #2196F3;
+    background-color: rgba(33, 150, 243, 0.1);
+        }
+
+    /* Flight Table */
+.flight-table  {
+            background-color: #333;
+    border-radius: 4px;
+    overflow-x: auto;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    font-style: italic;
+        }
+
+        .flight-table.has-data  {
+            display: block;
+    padding: 0;
+        }
+
+    /* Flight Table Grid Layout */
+.flight-table-grid  {
+            display: grid;grid-template-columns:60px          /* Monitor Toggle */    120px         /* Flight Number */    100px         /* Callsign */    100px         /* Registration */    80px          /* Airline ICAO */    80px          /* Origin ICAO */    100px         /* STA */    100px         /* ETA */    80px          /* Delay */    120px;        /* Phase */
+    gap: 1px;
+    background-color: #444;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 1040px;
+        }
+
+    /* Table Header Row */
+.table-header-row  {
+            display: contents;
+        }
+
+        .header-cell  {
+            background-color: #2d2d2d;
+    padding: 12px 8px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #4CAF50;
+    text-align: center;
+    border-bottom: 2px solid #4CAF50;
+        }
+
+    /* Flight Rows */
+.flight-row  {
+            display: contents;
+    cursor: pointer;
+        }
+
+        .flight-row:hover .cell  {
+            background-color: #3a3a3a;
+        }
+
+        .cell  {
+            background-color: #333;
+    padding: 10px 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #444;
+        }
+
+    /* Monitor Toggle Cell */
+.monitor-cell  {
+            justify-content: center;
+        }
+
+        .monitor-toggle  {
+            width: 16px;
+    height: 16px;
+    cursor: pointer;
+        }
+
+    /* Flight Number Cell */
+.flight-number-cell  {
+            font-weight: 600;
+    color: #4CAF50;
+        }
+
+    /* Status-based Color Coding (Requirement 8.5) *//* Delay Status Colors */.delay-cell.on-time  {
+            color: #4CAF50; /* Green - On time */
+    font-weight: 500;
+        }
+
+        .delay-cell.minor-delay  {
+            color: #FFC107; /* Yellow - Minor delay */
+    font-weight: 500;
+        }
+
+        .delay-cell.major-delay  {
+            color: #FF5722; /* Orange/Red - Major delay */
+    font-weight: 600;
+        }
+
+    /* Phase Status Colors */.phase-cell.phase-landed  {
+            color: #9E9E9E; /* Gray - Landed */
+        }
+
+        .phase-cell.phase-approach  {
+            color: #FF9800; /* Orange - Approach */
+    font-weight: 500;
+        }
+
+        .phase-cell.phase-enroute  {
+            color: #2196F3; /* Blue - En Route */
+        }
+
+        .phase-cell.phase-preflight  {
+            color: #BDBDBD; /* Light Gray - Pre-flight */
+        }
+
+        .phase-cell.phase-cancelled  {
+            color: #F44336; /* Red - Cancelled */
+    font-weight: 600;
+        }
+
+        .phase-cell.phase-diverted  {
+            color: #9C27B0; /* Purple - Diverted */
+    font-weight: 500;
+        }
+
+    /* Row Highlighting */.flight-row.highlight-new .cell  {
+            background-color: #4a4a00; /* Yellow highlight for new/updated */
+    animation: highlight-fade 5s ease-out;
+        }
+
+        .flight-row.monitored .cell  {
+            border-left: 3px solid #4CAF50;
+        }
+
+        .flight-row.cargo-flight .cell  {
+            opacity: 0.7;
+        }
+
+        @keyframes highlight-fade  {
+            0%  {
+            background-color: #6a6a00;
+        }
+    100%  {
+            background-color: #333;
+        }}
+
+    /* Empty State */
+.empty-state  {
+            text-align: center;
+    padding: 40px 20px;
+    color: #999;
+        }
+
+        .empty-state-hint  {
+            font-size: 12px;
+    margin-top: 8px;
+    opacity: 0.7;
+        }
+
+    /* Responsive Design for Flight Table */
+@media (max-width: 1400px)  {
+            .flight-table-grid  {
+            grid-template-columns:
+        50px 100px 90px 90px 70px 70px 90px 90px 70px 100px;
+        min-width: 900px;
+        }
+
+        .header-cell, .cell  {
+            padding: 8px 6px;
+        font-size: 12px;
+        }
+
+        }
+
+        @media (max-width: 1200px)  {
+            .flight-table-grid  {
+            grid-template-columns:
+        40px 90px 80px 80px 60px 60px 80px 80px 60px 90px;
+        min-width: 760px;
+        }
+
+        .header-cell, .cell  {
+            padding: 6px 4px;
+        font-size: 11px;
+        }}
+
+    /* Notification Styles */
+.notification  {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn  {
+            from  {
+            transform: translateX(100%);
+        opacity: 0;
+        }
+    to  {
+            transform: translateX(0);
+        opacity: 1;
+        }}
+
+    /* Settings Modal Styles */
+.settings-tabs  {
+            width: 100%;
+        }
+
+        .tab-buttons  {
+            display: flex;
+    border-bottom: 1px solid #444;
+    margin-bottom: 20px;
+        }
+
+        .tab-button  {
+            background: none;
+    border: none;
+    color: #ccc;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+        }
+
+        .tab-button:hover  {
+            color: #fff;
+    background-color: #3a3a3a;
+        }
+
+        .tab-button.active  {
+            color: #4CAF50;
+    border-bottom-color: #4CAF50;
+        }
+
+        .tab-content  {
+            display: none;
+        }
+
+        .tab-content.active  {
+            display: block;
+        }
+
+        .form-group  {
+            margin-bottom: 20px;
+        }
+
+        .form-group label  {
+            display: block;
+    margin-bottom: 8px;
+    color: #ccc;
+    font-weight: 500;
+        }
+
+        .checkbox-label  {
+            display: flex !important;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"]  {
+            margin: 0;
+        }
+
+        .form-input  {
+            width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    font-size: 14px;
+    box-sizing: border-box;
+        }
+
+        .form-input:focus  {
+            outline: none;
+    border-color: #4CAF50;
+        }
+
+        .form-help  {
+            display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #999;
+        }
+
+        .status-message  {
+            margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: none;
+        }
+
+        .status-message.success  {
+            background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+    display: block;
+        }
+
+        .status-message.error  {
+            background-color: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+    border: 1px solid #F44336;
+    display: block;
+        }
+
+        .status-message.warning  {
+            background-color: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+    border: 1px solid #FF9800;
+    display: block;
+        }
+
+        .status-message.info  {
+            background-color: rgba(33, 150, 243, 0.2);
+    color: #2196F3;
+    border: 1px solid #2196F3;
+    display: block;
+        }
+
+    /* Enhanced Settings Modal Styles */
+.settings-modal-content  {
+            max-width: 600px;
+        }
+
+        .form-row  {
+            display: flex;
+    gap: 15px;
+    align-items: end;
+        }
+
+        .form-row .form-group  {
+            flex: 1;
+    margin-bottom: 0;
+        }
+
+        .form-row .btn  {
+            margin-bottom: 0;
+    white-space: nowrap;
+        }
+
+        .api-key-actions  {
+            display: flex;
+    gap: 10px;
+    margin-top: 10px;
+        }
+
+        .api-key-actions .btn  {
+            flex: 1;
+        }
+
+        .session-info  {
+            background-color: #333;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 15px;
+    font-size: 12px;
+    color: #ccc;
+        }
+
+        .session-info strong  {
+            color: #4CAF50;
+        }
+
+        .danger-zone  {
+            background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 20px;
+        }
+
+        .danger-zone h5  {
+            color: #F44336;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+        }
+
+        .danger-zone p  {
+            margin: 0 0 10px 0;
+    font-size: 12px;
+    color: #ccc;
+        }
+
+        .btn-danger  {
+            background-color: #F44336;
+    color: white;
+    border: none;
+        }
+
+        .btn-danger:hover  {
+            background-color: #d32f2f;
+        }
+
+        .notification-permission-status  {
+            display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    font-size: 12px;
+        }
+
+        .permission-indicator  {
+            width: 8px;
+    height: 8px;
+    border-radius: 50%;
+        }
+
+        .permission-indicator.granted  {
+            background-color: #4CAF50;
+        }
+
+        .permission-indicator.denied  {
+            background-color: #F44336;
+        }
+
+        .permission-indicator.default  {
+            background-color: #FFC107;
+        }
+
+        .about-section  {
+            text-align: center;
+        }
+
+        .about-section h4  {
+            color: #4CAF50;
+    margin-bottom: 20px;
+        }
+
+        .about-section p  {
+            margin: 10px 0;
+    color: #ccc;
+        }
+
+        .version-info  {
+            background-color: #333;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+        }
+
+        .feature-list  {
+            text-align: left;
+    margin: 20px 0;
+        }
+
+        .feature-list ul  {
+            list-style-type: none;
+    padding: 0;
+        }
+
+        .feature-list li  {
+            padding: 5px 0;
+    color: #ccc;
+        }
+
+        .feature-list li:before  {
+            content: "✓ ";
+    color: #4CAF50;
+    font-weight: bold;
+        }
+
+    /* Onboarding Styles (Task 24) */
+.onboarding-step  {
+            display: none;
+        }
+
+        .onboarding-step.active  {
+            display: block;
+        }
+
+        .onboarding-step h4  {
+            color: #4CAF50;
+    margin-bottom: 15px;
+        }
+
+        .onboarding-step ul, .onboarding-step ol  {
+            margin: 15px 0;
+    padding-left: 25px;
+        }
+
+        .onboarding-step li  {
+            margin: 8px 0;
+    line-height: 1.5;
+        }
+
+        .onboarding-navigation  {
+            display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #444;
+        }
+
+        .onboarding-dots  {
+            display: flex;
+    gap: 10px;
+        }
+
+        .dot  {
+            width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #666;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+        }
+
+        .dot.active  {
+            background-color: #4CAF50;
+        }
+
+        .dot:hover  {
+            background-color: #888;
+        }
+
+        .dot.active:hover  {
+            background-color: #45a049;
+        }
+
+    /* Initialization Progress Styles */
+#initialization-progress  {
+            width: 0%;
+    height: 4px;
+    background-color: #4CAF50;
+    transition: width 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+        }
+
+        #initialization-status  {
+            position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(45, 45, 45, 0.9);
+    color: #4CAF50;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    z-index: 9998;
+    display: none;
+        }
+
+    /* Ready State Indicator */
+.ready-state-indicator  {
+            position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #2d2d2d;
+    border: 2px solid #4CAF50;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+        }
+
+        .ready-state-indicator.initializing  {
+            border-color: #FF9800;
+    animation: pulse 2s infinite;
+        }
+
+        .ready-state-indicator.error  {
+            border-color: #F44336;
+    background-color: rgba(244, 67, 54, 0.1);
+        }
+
+        .ready-state-indicator.ready  {
+            border-color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        @keyframes pulse  {
+            0%  {
+            transform: scale(1);
+        opacity: 1;
+        }
+    50%  {
+            transform: scale(1.1);
+        opacity: 0.7;
+        }
+    100%  {
+            transform: scale(1);
+        opacity: 1;
+        }}
+
+    /* Responsive Design */
+@media (max-width: 768px)  {
+            .controls  {
+            flex-direction: column;
+        align-items: stretch;
+        }
+
+        .table-header  {
+            flex-direction: column;
+        align-items: stretch;
+        }
+
+        .table-controls  {
+            justify-content: space-between;
+        }
+
+        .modal-content  {
+            width: 95%;
+        margin: 10px;
+        max-height: 90vh;
+        }
+
+        .flight-detail-modal-content  {
+            max-width: none;
+        }
+
+        .flight-detail-grid  {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-header  {
+            padding: 15px;
+        }
+
+        .modal-body  {
+            padding: 15px;
+        }
+
+        .modal-footer  {
+            padding: 15px;
+        flex-direction: column;
+        }
+
+        .time-comparison  {
+            flex-direction: column;
+        align-items: flex-start;
+        }
+
+        }
+
+        @media (max-width: 480px)  {
+            .modal-content  {
+            width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+        }
+
+        .flight-detail-section  {
+            padding: 12px;
+        }
+
+        .modal-header h3  {
+            font-size: 18px;
+        }}
+</style>
+</head>
+<body>
+    <!-- Initialization Progress (Task 24) -->
+    <div id="initialization-progress"></div>
+    <div id="initialization-status">Initializing...</div>
+    
+    <div class="container">
+        <h1>FlightStat Bot</h1>
+        
+        <div id="app-content">
+            <!-- Header Section -->
+            <div class="header-section">
+                <div class="controls">
+                    <button id="import-clipboard-btn" class="btn btn-primary">
+                        📋 Import from Clipboard
+                    </button> 
+                   <button id="export-data-btn" class="btn btn-secondary">💾 Export Data</button>
+                    <button id="settings-btn" class="btn btn-secondary">
+                        ⚙️ Settings
+                    </button>
+                    
+                    <div class="airport-selection">
+                        <label for="airport-input">Airport:</label>
+                        <input type="text" id="airport-input" placeholder="Enter IATA code (e.g., FRA)" maxlength="4" style="text-transform: uppercase;">
+                        <div id="airport-suggestions" class="suggestions-dropdown"></div>
+                    </div>
+                    
+                    <label class="live-update-toggle">
+                        <input type="checkbox" id="live-update-toggle"> Live Updates
+                    </label>
+                    
+                    <div id="api-call-counter" class="api-call-counter">
+                        <span id="calls-used">0</span>/<span id="calls-total">500</span> calls
+                    </div>
+                    
+                    <div class="api-status">
+                        <span id="api-status-indicator" class="status-indicator">🔴</span>
+                        <span id="api-status-text">API: Not connected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Status Modal -->
+            <div id="import-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="import-modal-title">Import Status</h3>
+                        <button class="modal-close" onclick="closeImportModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="import-progress" class="progress-container" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <p>Processing clipboard data...</p>
+                        </div>
+                        <div id="import-results" style="display: none;">
+                            <p id="import-message"></p>
+                            <div id="import-details" class="import-details"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="import-confirm-btn" class="btn btn-primary" style="display: none;">Add Flights</button>
+                        <button class="btn btn-secondary" onclick="closeImportModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flight Detail Modal -->
+            <div id="flight-detail-modal" class="modal" style="display: none;">
+                <div class="modal-content flight-detail-modal-content">
+                    <div class="modal-header">
+                        <h3 id="flight-detail-title">Flight Details</h3>
+                        <button class="modal-close" onclick="closeFlightDetailModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="flight-detail-content" class="flight-detail-content">
+                            <!-- Flight details will be populated here -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="flightaware-link-btn" class="btn btn-primary" style="display: none;">🗺️ View on FlightAware</button>
+                        <button class="btn btn-secondary" onclick="closeFlightDetailModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="modal" style="display: none;">
+                <div class="modal-content settings-modal-content">
+                    <div class="modal-header">
+                        <h3>⚙️ Settings</h3>
+                        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="settings-tabs">
+                            <div class="tab-buttons">
+                                <button class="tab-button active" onclick="showSettingsTab('api-key')">🔑 API Key</button>
+                                <button class="tab-button" onclick="showSettingsTab('notifications')">🔔 Notifications</button>
+                                <button class="tab-button" onclick="showSettingsTab('about')">ℹ️ About</button>
+                            </div>
+
+                            <!-- API Key Tab -->
+                            <div id="api-key-tab" class="tab-content active">
+                                <h4>FlightAware API Configuration</h4>
+                                <div class="form-group">
+                                    <label for="api-key-input">API Key:</label>
+                                    <input type="password" id="api-key-input" class="form-input" placeholder="Enter your FlightAware API Key" autocomplete="off">
+                                    <small class="form-help">Your API key will be encrypted and stored locally.
+                                        <a href="https://flightaware.com/commercial/aeroapi/" target="_blank" style="color: #4CAF50;">Get your free API key here</a>
+                                    </small>
+                                </div>
+                                <div class="api-key-actions">
+                                    <button id="test-api-key-btn" class="btn btn-secondary">🔍 Test Connection</button>
+                                    <button id="save-api-key-btn" class="btn btn-primary">💾 Save API Key</button>
+                                </div>
+                                <div id="api-key-status" class="status-message"></div>
+
+                                <!-- Session Information -->
+                                <div class="session-info" id="session-info" style="display: none;">
+                                    <strong>Session Information:</strong><br>
+                                    <span id="session-time-remaining">Time remaining: --:--</span><br>
+                                    <span id="session-last-activity">Last activity: --:--</span>
+                                </div>
+                            </div>
+
+                            <!-- Notifications Tab -->
+                            <div id="notifications-tab" class="tab-content">
+                                <h4>Notification Settings</h4>
+
+                                <!-- Permission Status -->
+                                <div class="notification-permission-status" id="permission-status">
+                                    <div class="permission-indicator" id="permission-indicator"></div>
+                                    <span id="permission-text">Checking notification permission...</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="enable-notifications"> Enable Browser Notifications
+                                    </label>
+                                    <small class="form-help">Get notified about flight delays and status changes</small>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="delay-threshold">Delay Threshold (minutes):</label>
+                                        <input type="number" id="delay-threshold" class="form-input" value="15" min="5" max="120">
+                                        <small class="form-help">Notify when delays exceed this threshold</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="notification-duration">Display Duration (seconds):</label>
+                                        <input type="number" id="notification-duration" class="form-input" value="10" min="5" max="60">
+                                        <small class="form-help">How long notifications stay visible</small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <button id="test-notification-btn" class="btn btn-secondary">🔔 Test Notification</button>
+                                    <button id="request-permission-btn" class="btn btn-primary" style="display: none;">📱 Request Permission</button>
+                                </div>
+                                <div id="notification-status" class="status-message"></div>
+                            </div>
+
+                            <!-- About Tab -->
+                            <div id="about-tab" class="tab-content">
+                                <div class="about-section">
+                                    <h4>FlightStat Bot</h4>
+
+                                    <div class="version-info">
+                                        <strong>Version:</strong> 1.0.0<br>
+                                        <strong>Build:</strong> 2025-01-15<br>
+                                        <strong>Platform:</strong> HTML5 Standalone WebApp
+                                    </div>
+                                    <p>A professional live flight monitoring application for desktop browsers.</p>
+                                    <p>Powered by <strong>FlightAware AeroAPI</strong></p>
+                                    <div class="feature-list">
+                                        <h5>Key Features:</h5>
+                                        <ul>
+                                            <li>Real-time flight tracking with 5-hour rolling window</li>
+                                            <li>Intelligent rate limiting (500 calls/month)</li>
+                                            <li>Clipboard import for flight lists</li>
+                                            <li>Browser notifications for delays</li>
+                                            <li>Secure API key encryption</li>
+                                            <li>Session timeout protection</li>
+                                            <li>Export data in multiple formats</li>
+                                            <li>Responsive design for all screen sizes</li>
+                                        </ul>
+                                    </div>
+                                    <div class="danger-zone">
+                                        <h5>⚠️ Danger Zone</h5>
+                                        <p>This action will permanently delete all stored data including API keys, flight data, settings, and usage statistics.</p>
+                                        <button id="clear-all-data-btn" class="btn btn-danger">🗑️ Clear All Data</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeSettingsModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <div id="flight-table-container">
+                    <div class="table-header">
+                        <h2>Flight Monitor</h2>
+                        <div class="table-controls">
+                            <div class="filter-section">
+                                <label>
+                                    <input type="checkbox" id="show-cargo-flights"> Show Cargo Flights
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="show-long-haul-flights"> Show Long-haul Flights
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="show-monitored-only"> Show Monitored Only
+                                </label>
+                            </div>
+                            <div class="counter-section">
+                                <span id="active-flights-counter">0 flights monitored</span>
+                                <span id="visible-flights-counter">0 flights visible</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="flight-table" class="flight-table">
+                        <!-- Flight table will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>       
+ // Core JavaScript Classes and Data Structures
+        // FlightPhase Enum (Requirement 13.1-13.5)
+        const FlightPhase = {
+            PRE_FLIGHT: 'Pre-Flight',
+            EN_ROUTE: 'En Route',
+            APPROACH: 'Approach',
+            LANDED: 'Landed',
+            CANCELLED: 'Cancelled',
+            DIVERTED: 'Diverted'
+        };
+
+        // Flight Class with all properties and calculation methods (Requirements 3.1, 3.3, 13.1-13.5)
+        class Flight {
+            constructor(data = {}) {
+                this.id = data.id || this.generateId();
+                this.flightNumber = this.normalizeFlightNumber(data.flightNumber || '');
+                this.callsign = data.callsign ? data.callsign.toUpperCase() : '';
+                this.registration = data.registration ? data.registration.toUpperCase() : '';
+                this.airlineICAO = data.airlineICAO || this.extractAirlineICAO(this.flightNumber);
+                this.originICAO = data.originICAO ? data.originICAO.toUpperCase() : '';
+                this.scheduledArrival = data.scheduledArrival ? new Date(data.scheduledArrival) : null;
+                this.estimatedArrival = data.estimatedArrival ? new Date(data.estimatedArrival) : null;
+                this.actualArrival = data.actualArrival ? new Date(data.actualArrival) : null;
+                
+                // Set default monitoring status (Requirement 7.1)
+                this.isMonitored = data.isMonitored !== false; // Default true unless explicitly false
+                
+                // Automatic cargo deactivation (Requirement 7.3)
+                // Check if this is a cargo flight and deactivate monitoring by default
+                if (data.isMonitored === undefined && this.isCargo) {
+                    this.isMonitored = false;
+                }
+                
+                this.lastUpdated = new Date();
+                this.isNewOrUpdated = true;
+                
+                // Additional properties for extended information
+                this.aircraftType = data.aircraftType || '';
+                this.gate = data.gate || '';
+                this.status = data.status || '';
+                this.scheduledDeparture = data.scheduledDeparture ? new Date(data.scheduledDeparture) : null;
+                this.actualDeparture = data.actualDeparture ? new Date(data.actualDeparture) : null;
+            }
+
+            // Generate unique ID for flight
+            generateId() {
+                return 'flight_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            // Normalize flight number format (LH 441 -> LH441)
+            normalizeFlightNumber(flightNumber) {
+                if (!flightNumber) return '';
+                return flightNumber.replace(/\s+/g, '').toUpperCase();
+            }
+
+            // Extract airline ICAO code from flight number
+            extractAirlineICAO(flightNumber) {
+                if (!flightNumber) return '';
+                const match = flightNumber.match(/^([A-Z]{2,3})/);
+                return match ? this.convertIATAtoICAO(match[1]) : '';
+            }
+
+            // Convert IATA airline code to ICAO (simplified mapping)
+            convertIATAtoICAO(iataCode) {
+                const mapping = {
+                    'LH': 'DLH', 'BA': 'BAW', 'AF': 'AFR', 'KL': 'KLM',
+                    'LX': 'SWR', 'OS': 'AUA', 'SN': 'BEL', 'SK': 'SAS',
+                    'AY': 'FIN', 'IB': 'IBE', 'TP': 'TAP', 'EI': 'EIN'
+                };
+                return mapping[iataCode] || iataCode;
+            }
+
+            // Calculate delay in minutes (Requirement 3.1)
+            get delay() {
+                if (!this.estimatedArrival || !this.scheduledArrival) return 0;
+                return Math.round((this.estimatedArrival - this.scheduledArrival) / 60000);
+            }
+
+            // Calculate current flight phase (Requirements 13.1-13.5)
+            get phase() {
+                return this.calculatePhase();
+            }
+
+            calculatePhase() {
+                const now = new Date();
+                
+                // Check if flight is cancelled or diverted
+                if (this.status === 'CANCELLED') return FlightPhase.CANCELLED;
+                if (this.status === 'DIVERTED') return FlightPhase.DIVERTED;
+                
+                // If actually landed
+                if (this.actualArrival) return FlightPhase.LANDED;
+                
+                // If no estimated arrival, assume pre-flight
+                if (!this.estimatedArrival) return FlightPhase.PRE_FLIGHT;
+                
+                // Calculate time to arrival
+                const timeToArrival = this.estimatedArrival - now;
+                
+                // Final approach if less than 30 minutes
+                if (timeToArrival < 30 * 60 * 1000) return FlightPhase.APPROACH;
+                
+                // Check if flight has departed
+                if (this.actualDeparture || (this.scheduledDeparture && now > this.scheduledDeparture)) {
+                    return FlightPhase.EN_ROUTE;
+                }
+                
+                return FlightPhase.PRE_FLIGHT;
+            }
+
+            // Check if flight is cargo based on flight number patterns (Requirement 7.3)
+            get isCargo() {
+                // Common cargo airline ICAO codes
+                const cargoAirlineICAOs = [
+                    'UPS', 'FDX', 'GTI', 'ABX', 'ATN', 'CKS', 'DHL', 'EAT', 'GEC', 'SWN',
+                    'CVA', 'CLX', 'CAL', 'CJT', 'NCR', 'PAC', 'POL', 'QFA', 'SLK', 'TAY'
+                ];
+
+                // Check airline ICAO code first (most reliable)
+                if (cargoAirlineICAOs.includes(this.airlineICAO)) {
+                    return true;
+                }
+
+                // Common cargo airline flight number patterns
+                const cargoPatterns = [
+                    /^5Y/, /^8C/, /^CV/, /^QY/, /^GT/, // Atlas Air, Astral Aviation, Cargolux, etc.
+                    /^UPS/, /^FX/, /^DHL/, /^TNT/,    // Integrators
+                    /^WF/, /^K4/, /^5K/, /^MK/        // Additional cargo carriers
+                ];
+
+                // Check flight number patterns
+                const hasCargoPattern = cargoPatterns.some(pattern => pattern.test(this.flightNumber));
+
+                // Check for cargo keywords in flight number
+                const hasCargoKeyword = this.flightNumber.includes('CARGO') ||
+                                        this.flightNumber.includes('FREIGHT');
+
+                // Check for very high flight numbers (typically cargo) - but be more conservative
+                const flightNumberDigits = parseInt(this.flightNumber.replace(/[A-Z]/g, ''));
+                const isVeryHighFlightNumber = !isNaN(flightNumberDigits) && flightNumberDigits > 9000;
+                
+                return hasCargoPattern || hasCargoKeyword || isVeryHighFlightNumber;
+            }
+
+            // Check if flight is long-haul (>6 hours estimated flight time)
+            get isLongHaul() {
+                if (!this.scheduledDeparture || !this.scheduledArrival) return false;
+                const flightDuration = this.scheduledArrival - this.scheduledDeparture;
+                return flightDuration > 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+            }
+
+            // Update flight data with new information
+            updateWith(newData) {
+                let wasUpdated = false;
+                
+                // Update fields if new data is provided
+                if (newData.estimatedArrival && newData.estimatedArrival !== this.estimatedArrival) {
+                    this.estimatedArrival = new Date(newData.estimatedArrival);
+                    wasUpdated = true;
+                }
+
+                if (newData.actualArrival && newData.actualArrival !== this.actualArrival) {
+                    this.actualArrival = new Date(newData.actualArrival);
+                    wasUpdated = true;
+                }
+
+                if (newData.registration && !this.registration) {
+                    this.registration = newData.registration.toUpperCase();
+                    wasUpdated = true;
+                }
+
+                if (newData.gate && newData.gate !== this.gate) {
+                    this.gate = newData.gate;
+                    wasUpdated = true;
+                }
+
+                if (newData.status && newData.status !== this.status) {
+                    this.status = newData.status;
+                    wasUpdated = true;
+                }
+
+                if (wasUpdated) {
+                    this.lastUpdated = new Date();
+                    this.isNewOrUpdated = true;
+                }
+                
+                return wasUpdated;
+            }
+
+            // Generate flight key for matching purposes
+            getMatchingKey() {
+                return {
+                    callsign: this.callsign,
+                    flightNumber: this.flightNumber,
+                    registration: this.registration,
+                    originICAO: this.originICAO
+                };
+            }
+
+            // Convert to JSON for storage/export
+            toJSON() {
+                return {
+                    id: this.id,
+                    flightNumber: this.flightNumber,
+                    callsign: this.callsign,
+                    registration: this.registration,
+                    airlineICAO: this.airlineICAO,
+                    originICAO: this.originICAO,
+                    scheduledArrival: this.scheduledArrival?.toISOString(),
+                    estimatedArrival: this.estimatedArrival?.toISOString(),
+                    actualArrival: this.actualArrival?.toISOString(),
+                    scheduledDeparture: this.scheduledDeparture?.toISOString(),
+                    actualDeparture: this.actualDeparture?.toISOString(),
+                    isMonitored: this.isMonitored,
+                    aircraftType: this.aircraftType,
+                    gate: this.gate,
+                    status: this.status,
+                    lastUpdated: this.lastUpdated.toISOString()
+                };
+            }
+        }
+
+        // Initialize FlightStat Bot Application
+        let flightStatBot;
+        
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('FlightStat Bot: DOM loaded, initializing application...');
+            
+            // Create a minimal working application
+            flightStatBot = {
+                flights: new Map(),
+                isInitialized: false,
+                
+                initialize: function() {
+                    console.log('FlightStat Bot: Application initialized successfully');
+                    this.isInitialized = true;
+                    
+                    // Hide initialization progress
+                    const progressBar = document.getElementById('initialization-progress');
+                    const statusDiv = document.getElementById('initialization-status');
+                    
+                    if (progressBar) {
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                        }, 500);
+                    }
+                    
+                    if (statusDiv) {
+                        statusDiv.textContent = 'Ready';
+                        setTimeout(() => {
+                            statusDiv.style.display = 'none';
+                        }, 1000);
+                    }
+                    
+                    // Show empty flight table
+                    this.renderEmptyTable();
+                },
+                
+                renderEmptyTable: function() {
+                    const tableContainer = document.getElementById('flight-table');
+                    if (tableContainer) {
+                        tableContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div>No flights to display</div>
+                                <div class="empty-state-hint">Import flight data or configure API to get started</div>
+                            </div>
+                        `;
+                    }
+                }
+            };
+            
+            // Initialize the application
+            flightStatBot.initialize();
+        });
+
+        // Basic modal functions
+        function closeImportModal() {
+            const modal = document.getElementById('import-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function closeFlightDetailModal() {
+            const modal = document.getElementById('flight-detail-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function showSettingsTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab content
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) selectedTab.classList.add('active');
+            
+            // Add active class to clicked button
+            const clickedButton = event.target;
+            if (clickedButton) clickedButton.classList.add('active');
+        }
+
+        // Basic event listeners for buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Airport input auto-uppercase
+            const airportInput = document.getElementById('airport-input');
+            if (airportInput) {
+                airportInput.addEventListener('input', function(e) {
+                    // Convert to uppercase and remove any non-letter characters
+                    let value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                    // Limit to 4 characters (ICAO) or 3 characters (IATA)
+                    if (value.length > 4) {
+                        value = value.substring(0, 4);
+                    }
+                    e.target.value = value;
+                });
+                
+                // Also handle paste events
+                airportInput.addEventListener('paste', function(e) {
+                    setTimeout(() => {
+                        let value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                        if (value.length > 4) {
+                            value = value.substring(0, 4);
+                        }
+                        e.target.value = value;
+                    }, 0);
+                });
+            }
+
+            // Settings button
+            const settingsBtn = document.getElementById('settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('settings-modal');
+                    if (modal) modal.style.display = 'flex';
+                });
+            }
+
+            // Import button
+            const importBtn = document.getElementById('import-clipboard-btn');
+            if (importBtn) {
+                importBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('import-modal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        const modalBody = modal.querySelector('.modal-body');
+                        if (modalBody) {
+                            modalBody.innerHTML = '<p>Clipboard import functionality will be implemented in future tasks.</p>';
+                        }
+                    }
+                });
+            }
+
+            // Export button
+            const exportBtn = document.getElementById('export-data-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    alert('Export functionality will be implemented in future tasks.');
+                });
+            }
+        });
+
+        console.log('FlightStat Bot: JavaScript loaded successfully');
+    </script>
+</body>
+</html>

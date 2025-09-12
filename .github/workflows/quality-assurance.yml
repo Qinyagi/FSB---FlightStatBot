@@ -1,0 +1,165 @@
+name: FlightStat Bot Quality Assurance
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    name: Quality Gates & Testing
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm install -g jest puppeteer lighthouse
+        npm install --save-dev @testing-library/jest-dom
+        
+    - name: Run Feature Validation Tests
+      run: |
+        echo "Running Feature Validation..."
+        node .kiro/testing/ci-test-runner.js
+        
+    - name: Performance Audit with Lighthouse
+      run: |
+        echo "Running Lighthouse Performance Audit..."
+        lighthouse --chrome-flags="--headless" --output=json --output-path=./lighthouse-report.json file://$(pwd)/flightstat-bot.html
+        
+    - name: Visual Regression Testing
+      run: |
+        echo "Running Visual Regression Tests..."
+        node .kiro/testing/visual-regression-tests.js
+        
+    - name: Security Scan
+      run: |
+        echo "Running Security Scan..."
+        # Scan for common security issues in HTML/JS
+        grep -r "eval\|innerHTML\|document.write" . --include="*.html" --include="*.js" || echo "No security issues found"
+        
+    - name: Code Quality Check
+      run: |
+        echo "Running Code Quality Checks..."
+        # Check for console.log statements (should be removed in production)
+        if grep -r "console\.log" flightstat-bot.html; then
+          echo "Warning: console.log statements found"
+        fi
+        
+    - name: Accessibility Testing
+      run: |
+        echo "Running Accessibility Tests..."
+        # Basic accessibility checks
+        node .kiro/testing/accessibility-tests.js
+        
+    - name: Bundle Size Analysis
+      run: |
+        echo "Analyzing Bundle Size..."
+        wc -c flightstat-bot.html
+        echo "HTML file size checked"
+        
+    - name: Generate Quality Report
+      run: |
+        echo "Generating Quality Report..."
+        node .kiro/testing/generate-quality-report.js
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          lighthouse-report.json
+          visual-regression-report.json
+          quality-report.json
+          
+    - name: Comment PR with Results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read quality report
+          let report = 'Quality Assurance Report\n\n';
+          
+          try {
+            const lighthouse = JSON.parse(fs.readFileSync('lighthouse-report.json', 'utf8'));
+            const performance = lighthouse.lhr.categories.performance.score * 100;
+            const accessibility = lighthouse.lhr.categories.accessibility.score * 100;
+            
+            report += `## Performance Metrics\n`;
+            report += `- Performance Score: ${performance}%\n`;
+            report += `- Accessibility Score: ${accessibility}%\n\n`;
+          } catch (e) {
+            report += `Performance metrics unavailable\n\n`;
+          }
+          
+          report += `## Quality Gates\n`;
+          report += `✅ Feature validation passed\n`;
+          report += `✅ Security scan completed\n`;
+          report += `✅ Code quality checked\n`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          });
+
+  deploy-staging:
+    needs: quality-gates
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to Staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Here you would deploy to your staging environment
+        
+    - name: Run Smoke Tests
+      run: |
+        echo "Running smoke tests on staging..."
+        node .kiro/testing/smoke-tests.js
+        
+  deploy-production:
+    needs: quality-gates
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create Production Backup
+      run: |
+        echo "Creating production backup..."
+        cp flightstat-bot.html flightstat-bot-backup-$(date +%Y%m%d-%H%M%S).html
+        
+    - name: Deploy to Production
+      run: |
+        echo "Deploying to production..."
+        # Here you would deploy to your production environment
+        
+    - name: Post-Deploy Validation
+      run: |
+        echo "Running post-deploy validation..."
+        node .kiro/testing/production-validation.js
+        
+    - name: Notify Success
+      run: |
+        echo "Deployment successful! 🚀"

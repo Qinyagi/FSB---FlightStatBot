@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Unclear Position Reporting</title>
+  <style>
+:root{
+  --bg:#0b0e13;
+  --panel:#121722;
+  --text:#e8ecf1;
+  --muted:#a7b0be;
+  --brand:#6ee7ff;
+  --primary:#39bdf2;
+  --primary-600:#22a3d8;
+  --accent:#80ffea;
+  --danger:#ff5a5f;
+  --chip:#1b2230;
+  --chip-on:#21324a;
+  --chip-border:#2a364a;
+  --btn:#1e2736;
+  --btn-ghost:#141a24;
+  --input:#0f141d;
+  --shadow:0 6px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;
+  color:var(--text);
+  background:linear-gradient(180deg,#0b0e13 0%, #0e1420 100%);
+}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid #1d2431;background:#0c111a;
+  position:sticky;top:0;z-index:3;
+}
+.brand{font-weight:700;letter-spacing:.2px}
+.controls{display:flex;gap:10px;align-items:center}
+.container{padding:20px;max-width:1200px;margin:0 auto;display:grid;gap:18px}
+.panel{
+  background:var(--panel);
+  border:1px solid #1c2636;border-radius:12px;padding:14px 14px;
+  box-shadow:var(--shadow);
+}
+.panel-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h3,h4,h5{margin:6px 0 10px}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  background:var(--chip);
+  border:1px solid var(--chip-border);
+  color:var(--text);
+  padding:8px 12px;border-radius:999px;cursor:pointer;user-select:none;
+  transition:.15s; font-weight:600;
+}
+.chip.active{background:var(--chip-on);border-color:#2f4770;box-shadow:0 0 0 2px #19304f inset}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.group{
+  border:1px solid #1c2636;border-radius:10px;overflow:hidden;background:#0f1420
+}
+.group-header{
+  padding:8px 12px;background:#0c121b;border-bottom:1px solid #1a2332;
+  font-weight:700;color:var(--brand);
+  display:flex;align-items:center;justify-content:space-between
+}
+.group-body{padding:10px;display:flex;flex-wrap:wrap;gap:8px}
+.pos-btn{
+  background:var(--btn);border:1px solid #27364c;color:var(--text);
+  padding:8px 10px;border-radius:8px;cursor:pointer;transition:.15s; font-weight:600;
+}
+.pos-btn.selected{background:#1f3a52;border-color:#2e78a0;box-shadow:0 0 0 2px #2c6fa0 inset}
+.btn{
+  background:var(--btn);border:1px solid #2a394f;color:var(--text);
+  padding:8px 12px;border-radius:8px;cursor:pointer;transition:.15s;font-weight:600
+}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(180deg,var(--primary),var(--primary-600));border:0;color:#071018}
+.btn.secondary{background:#182233;border:1px solid #2a3a54}
+.btn.small{padding:6px 10px;font-size:.9rem}
+.btn.ghost{background:var(--btn-ghost)}
+.btn.danger{background:#31161b;border-color:#5e2a33;color:#ffc7cd}
+.icon-btn{background:transparent;border:0;color:var(--text);cursor:pointer;font-size:18px}
+input[type="search"], input[type="text"], input[type="email"], input[type="url"], input[type="number"], input[type="password"], select{
+  background:var(--input);border:1px solid #233049;border-radius:8px;color:var(--text);
+  padding:8px 10px;outline:none;min-width:180px
+}
+.sticky-footer{position:sticky;bottom:12px}
+.summary{color:var(--muted);margin-bottom:8px}
+
+.drawer{
+  position:fixed;top:0;right:-520px;width:520px;max-width:100%;height:100%;
+  background:#0d121b;border-left:1px solid #1b2637;transition:right .2s ease;z-index:4;box-shadow:var(--shadow);display:flex;flex-direction:column;
+}
+.drawer.open{right:0}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1b2637}
+.drawer-content{padding:14px 16px;overflow:auto}
+.admin-section{margin-bottom:18px}
+.email-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.email-card{border:1px solid #203049;border-radius:10px;padding:10px;background:#0f1420}
+.email-card h6{margin:4px 0 10px}
+.email-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.email-pill{background:#152034;border:1px solid #23324a;border-radius:999px;padding:6px 10px;display:flex;gap:8px;align-items:center}
+.email-pill button{background:transparent;border:0;color:#97a8c5;cursor:pointer}
+.group-create{display:flex;gap:8px;margin-bottom:10px}
+.custom-groups{display:flex;flex-wrap:wrap;gap:8px}
+.cg-pill{background:#131c2a;border:1px solid #24324a;border-radius:999px;padding:6px 10px;display:flex;gap:8px;align-items:center}
+.move-tool{margin-top:14px;border-top:1px solid #1b2637;padding-top:12px}
+.move-row{display:flex;gap:8px;flex-wrap:wrap}
+.hint{color:#96a2b8;font-size:.9rem}
+
+.backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.2s;z-index:3
+}
+.backdrop.open{opacity:1;pointer-events:auto}
+
+.lang-switch .btn.small{min-width:42px}
+.emails-note{color:var(--muted);margin-top:6px}
+
+/* Modal (Popup) */
+.modal{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:5;
+}
+.modal.open{display:flex}
+.modal-card{
+  background:#0f1420; border:1px solid #1c2636; border-radius:12px; width:720px; max-width:94%;
+  box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column;
+}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#0c121b;border-bottom:1px solid #1a2332}
+.modal-body{padding:14px;display:grid;gap:12px}
+.inline-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.table{width:100%; border-collapse:collapse}
+.table th,.table td{border:1px solid #233049; padding:8px 10px; text-align:left}
+.table th{background:#0c121b}
+.badge{border-radius:999px; padding:2px 8px; font-weight:700}
+.badge.mod{background:#1e90ff33; color:#9fd2ff}
+.badge.asap{background:#f7c94833; color:#f7c948}
+.badge.urgent{background:#ff8a0033; color:#ffb774}
+.badge.immediate{background:#ff5a5f33; color:#ff9ba0}
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Unclear Position Reporting</div>
+    <div class="controls">
+    <div class="lang-switch">
+    <button id="lang-de" class="btn small">DE</button>
+    <button id="lang-en" class="btn small ghost">EN</button>
+    </div>
+    <button id="adminBtn" class="btn secondary">Admin</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+    <h3 data-i18n="recipients">Adressaten</h3>
+    <div class="chip-row" id="recipientChips"></div>
+    <div class="emails-note" data-i18n="recipientsHint">
+    Klicke auf die Adressaten. Die zugehörigen E-Mail-Adressen verwaltest du im Admin-Bereich.
+    </div>
+    </section>
+
+    <section class="panel">
+    <div class="panel-header">
+    <h3 data-i18n="positions">Positionen</h3>
+    <div class="panel-actions">
+    <button id="selectAll" class="btn small" data-i18n="selectAll">Alle auswählen</button>
+    <button id="clearAll" class="btn small ghost" data-i18n="clearAll">Auswahl löschen</button>
+    <input type="search" id="search" placeholder="Suche..." aria-label="Suche" />
+    </div>
+    </div>
+    <div id="groups" class="groups"></div>
+    </section>
+
+    <section class="panel sticky-footer">
+    <div class="summary">
+    <span data-i18n="selectedPositions">Ausgewählte Positionen:</span>
+    <span id="selectedCount">0</span>
+    </div>
+    <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button id="composeBtn" class="btn primary">
+    <span data-i18n="compose">E-Mail in Outlook vorbereiten</span>
+    </button>
+    <select id="sendMode" class="btn small" title="Versandmodus" style="min-width:240px">
+    <option value="combined" data-i18n="sendCombined">Eine gemeinsame E-Mail an alle ausgewählten Adressaten</option>
+    <option value="perRecipient" data-i18n="sendPerRecipient">Separate E-Mails je Adressat</option>
+    </select>
+    <button id="previewBtn" class="btn small ghost" title="Vorschau/PDF" data-i18n="preview">Vorschau/PDF</button>
+    </div>
+    </section>
+  </main>
+
+  <!-- Admin Drawer -->
+  <aside id="adminDrawer" class="drawer">
+    <div class="drawer-header">
+    <h4 data-i18n="adminTitle">Admin-Bereich</h4>
+    <button id="closeAdmin" class="icon-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="drawer-content">
+    <section class="admin-section">
+    <h5 data-i18n="emailMgmt">E-Mail-Adressverwaltung</h5>
+    <div class="email-grid" id="emailGrid"></div>
+    </section>
+
+    <section class="admin-section">
+    <h5 data-i18n="equipmentMgmt">Equipment-Liste</h5>
+    <div class="group-create">
+    <input id="newEquipmentName" placeholder="Neues Equipment..." />
+    <button id="addEquipmentBtn" class="btn small" data-i18n="addEquipment">Hinzufügen</button>
+    </div>
+    <div id="equipmentList" class="email-list"></div>
+    <div class="hint" data-i18n="equipmentHint">Diese Liste definiert die verfügbaren Equipment-Typen für Zuordnungen.</div>
+    </section>
+
+    <section class="admin-section">
+    <h5 data-i18n="groupMgmt">Gruppenverwaltung</h5>
+    <div class="group-create">
+    <input id="newGroupName" placeholder="Neue Gruppe..." />
+    <button id="addGroupBtn" class="btn small" data-i18n="addGroup">Gruppe hinzufügen</button>
+    </div>
+    <div id="customGroups" class="custom-groups"></div>
+
+    <div class="move-tool">
+    <div class="move-row">
+    <select id="movePosition"></select>
+    <select id="moveTargetGroup"></select>
+    <button id="moveBtn" class="btn small" data-i18n="move">Verschieben</button>
+    </div>
+    <div class="hint" data-i18n="moveHint">
+    Wähle eine Position und eine Zielgruppe, um sie zu verschieben.
+    </div>
+    </div>
+    </section>
+
+    <section class="admin-section">
+    <button id="resetData" class="btn danger ghost" data-i18n="reset">Lokale Daten zurücksetzen</button>
+    </section>
+    </div>
+  </aside>
+
+  <div id="backdrop" class="backdrop"></div>
+
+  <!-- Position Assignment Modal -->
+  <div id="assignModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="assignTitle">
+    <div class="modal-header">
+    <h4 id="assignTitle" data-i18n="assignTitle">Equipment zuordnen</h4>
+    <button id="closeAssignModal" class="icon-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+    <div class="inline-row">
+    <div class="btn small" style="pointer-events:none" id="assignPosBadge">POS</div>
+    <select id="assignRecipient">
+    <option>UPS</option>
+    <option>FKB</option>
+    <option>WISAG</option>
+    </select>
+    <select id="assignEquipment"></select>
+    <select id="assignPriority">
+    <option value="mod">Moderat</option>
+    <option value="asap">ASAP</option>
+    <option value="urgent">Dringend</option>
+    <option value="immediate">Sofort</option>
+    </select>
+    <button id="assignAddBtn" class="btn small" data-i18n="add">Hinzufügen</button>
+    </div>
+    <table class="table" id="assignTable">
+    <thead>
+    <tr>
+    <th data-i18n="colPos">POS</th>
+    <th data-i18n="colRecipient">Adressat</th>
+    <th data-i18n="colEquipment">Equipment</th>
+    <th data-i18n="colPriority">Dringlichkeit</th>
+    <th></th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+    </table>
+    </div>
+    </div>
+  </div>
+
+  <script>
+  // Whitelist for allowed position groups (hide everything else)
+  const ALLOWED_GROUPS = ["A","B","C","D","E","F","G","H"]; // adjust if needed
+
+  function isAllowedGroup(groupKey){
+    return ALLOWED_GROUPS.includes(groupKey);
+  }
+  function positionGroupOf(pos){
+    // Group is the leading letter block (e.g., A,B,... or multi-letter like RWY)
+    // We detect by finding which key in positionsData contains the pos
+    for(const g of Object.keys(positionsData)){
+      if(positionsData[g]?.includes(pos)) return g;
+    }
+    // fallback: derive by letters prefix
+    const m = String(pos).match(/^[A-Z]+/);
+    return m ? m[0] : "";
+  }
+  function isAllowedPosition(pos){
+    const g = positionGroupOf(pos);
+    return isAllowedGroup(g);
+  }
+
+/* --- Positionsdaten direkt eingebettet --- */
+const positionsData = {
+  "A": ["A10","A11","A12","A14","A16","A17","A18","A20","A21","A22","A23","A24","A25","A26","A27","A28","A29","A30","A31","A32","A33","A34","A35"],
+  "B": ["B10","B11","B12","B14","B16","B17","B18","B20","B21","B22","B23","B24","B26","B27","B28","B29","B30"],
+  "C": ["C01","C02","C03","C04","C05","C06","C10","C12","C14","C50"],
+  "D": ["D10","D11","D12","D14","D15","D16","D18","D19","D20","D22","D23","D24","D26","D28","D30","D32","D34","D36","D38","D40","D42","D50","D51","D52","D53","D54","D56","D57","D58","D60","D62","D64"],
+  "E": ["E09","E10","E12","E13","E14","E15","E16","E17","E20","E21","E22","E23","E24","E30","E31","E32","E33","E34","E35","E36","E40","E41","E42","E43","E44","E45","E46"],
+  "F": ["F17","F19","F20","F21","F22","F23","F24","F25","F26","F31","F32","F34"],
+  "G": ["G01","G02","G10","G12","G14","G20","G22","G23","G24","G25","G26","G27","GAT3"],
+  "H": ["H01","H02","H03","H06","H07"],
+  "L": ["LSA","LSA-P","L02","L03"],
+  "M": ["MIL"],
+  "RWY": ["RWY"],
+  "T": ["TWY"],
+  "U": ["U","U10","U12","U14","U16","U18","U20","U22","U24","U26"],
+  "V": ["V10","V101","V11","V111","V12","V121","V13","V131","V14","V20","V21","V211","V22","V221","V23","V231","V30","V31","V310","V32","V320","V33","V330","V40","V401","V410","V411","V42","V43","V430","V44","V440","V50","V51","V510","V530","V550","V55","V56","V59","V99M","V99N","V99S"],
+  "W": ["W10","W12","W14","W16","W18","W20","W22","W24","W26","W28","W30","W32","W34"],
+  "X": ["X01","X02","X03","X04","X05","X07","X09","X10","X11","X12"],
+  "Y": ["Y01","Y02","Y03","Y04","Y05","Y06","Y07","Y08","Y09","Y10","Y11","Y12","Z"]
+};
+
+/* --- i18n Strings --- */
+const STR = {
+  de: {
+    recipients: "Adressaten",
+    recipientsHint: "Klicke auf die Adressaten. Die zugehörigen E-Mail-Adressen verwaltest du im Admin-Bereich.",
+    positions: "Positionen",
+    selectAll: "Alle auswählen",
+    clearAll: "Auswahl löschen",
+    selectedPositions: "Ausgewählte Positionen:",
+    compose: "E-Mail in Outlook vorbereiten",
+    adminTitle: "Admin-Bereich",
+    emailMgmt: "E-Mail-Adressverwaltung",
+    groupMgmt: "Gruppenverwaltung",
+    addGroup: "Gruppe hinzufügen",
+    move: "Verschieben",
+    moveHint: "Wähle eine Position und eine Zielgruppe, um sie zu verschieben.",
+    reset: "Lokale Daten zurücksetzen",
+    mailSubject: "Unsafe Positions reported by Apron Control team – Sofortiges Entfernen des Equipments erforderlich",
+    mailBodyPrefix: "Sehr geehrte Damen und Herren,\n\nauf den folgenden Positionen befindet sich Abfertigungsequipment, das umgehend entfernt werden muss:",
+    mailBodySuffix: "\n\nVielen Dank!\nApron Control",
+    alertNoRecipients: "Bitte wähle mindestens einen Adressaten mit hinterlegter E-Mail-Adresse.",
+    alertNoPositions: "Bitte wähle mindestens eine Position aus.",
+    searchPlaceholder: "Suche...",
+    equipmentMgmt: "Equipment-Liste",
+    addEquipment: "Hinzufügen",
+    equipmentHint: "Diese Liste definiert die verfügbaren Equipment-Typen für Zuordnungen.",
+    assignTitle: "Equipment zuordnen",
+    add: "Hinzufügen",
+    colPos: "POS",
+    colRecipient: "Adressat",
+    colEquipment: "Equipment",
+    colPriority: "Dringlichkeit",
+    preview: "Vorschau/PDF",
+    sendCombined: "Eine gemeinsame E-Mail an alle ausgewählten Adressaten",
+    sendPerRecipient: "Separate E-Mails je Adressat",
+    priority_mod: "Moderat",
+    priority_asap: "ASAP",
+    priority_urgent: "Dringend",
+    priority_immediate: "Sofort",
+    resetWarn1: "Wirklich alle lokalen Daten (E-Mails, Gruppen, Verschiebungen, Equipment, Zuordnungen) löschen?",
+    resetWarn2: "Letzte Warnung: Dieser Vorgang kann nicht rückgängig gemacht werden."
+  },
+  en: {
+    recipients: "Recipients",
+    recipientsHint: "Click recipients. Manage their email addresses in the Admin area.",
+    positions: "Positions",
+    selectAll: "Select all",
+    clearAll: "Clear selection",
+    selectedPositions: "Selected positions:",
+    compose: "Prepare email in Outlook",
+    adminTitle: "Admin",
+    emailMgmt: "Email address management",
+    groupMgmt: "Group management",
+    addGroup: "Add group",
+    move: "Move",
+    moveHint: "Choose a position and a target group to move it.",
+    reset: "Reset local data",
+    mailSubject: "Unsafe positions reported by Apron Control team – Immediate removal of equipment required",
+    mailBodyPrefix: "Dear Sir or Madam,\n\nHandling equipment is present at the following positions and must be removed immediately:",
+    mailBodySuffix: "\n\nThank you!\nApron Control",
+    alertNoRecipients: "Please select at least one recipient with an email address configured.",
+    alertNoPositions: "Please select at least one position.",
+    searchPlaceholder: "Search...",
+    equipmentMgmt: "Equipment list",
+    addEquipment: "Add",
+    equipmentHint: "This list defines available equipment types for assignments.",
+    assignTitle: "Assign equipment",
+    add: "Add",
+    colPos: "POS",
+    colRecipient: "Recipient",
+    colEquipment: "Equipment",
+    colPriority: "Priority",
+    preview: "Preview/PDF",
+    sendCombined: "Single combined email to all selected recipients",
+    sendPerRecipient: "Separate emails per recipient",
+    priority_mod: "Moderate",
+    priority_asap: "ASAP",
+    priority_urgent: "Urgent",
+    priority_immediate: "Immediate",
+    resetWarn1: "Delete ALL local data (emails, groups, overrides, equipment, assignments)?",
+    resetWarn2: "Last warning: This cannot be undone."
+  }
+};
+
+const DEFAULT_RECIPIENTS = ["UPS","FKB","WISAG"];
+const STORAGE_KEYS = {
+  emails: "upr_emails_v1",
+  customGroups: "upr_custom_groups_v1",
+  overrides: "upr_group_overrides_v1",
+  lang: "upr_lang_v1",
+  equipment: "upr_equipment_v1",
+  assignments: "upr_assignments_v1"
+};
+
+let LANG = localStorage.getItem(STORAGE_KEYS.lang) || "de";
+let selectedRecipients = new Set();
+let selectedPositions = new Set();
+let customGroups = [];
+let groupOverrides = {};
+let emails = {};
+let equipmentMaster = []; // string[]
+// assignments[pos][recipient] = [{equipment, priority}]
+let assignments = {};
+
+const qs = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
+
+function t(key){ return STR[LANG][key]; }
+function tPriority(code){
+  return STR[LANG][`priority_${code}`] || code;
+}
+
+function applyI18n(){
+  qsa("[data-i18n]").forEach(el=>{
+    const k = el.getAttribute("data-i18n");
+    el.textContent = t(k);
+  });
+  const search = qs("#search");
+  if (search) search.placeholder = t("searchPlaceholder");
+  qs("#lang-de").classList.toggle("ghost", LANG!=="de");
+  qs("#lang-en").classList.toggle("ghost", LANG!=="en");
+}
+
+function loadLocal(){
+  emails = JSON.parse(localStorage.getItem(STORAGE_KEYS.emails) || "{}");
+  customGroups = JSON.parse(localStorage.getItem(STORAGE_KEYS.customGroups) || "[]");
+  groupOverrides = JSON.parse(localStorage.getItem(STORAGE_KEYS.overrides) || "{}");
+  equipmentMaster = JSON.parse(localStorage.getItem(STORAGE_KEYS.equipment) || "[]");
+  assignments = JSON.parse(localStorage.getItem(STORAGE_KEYS.assignments) || "{}");
+  DEFAULT_RECIPIENTS.forEach(r=>{ if(!emails[r]) emails[r]=[]; });
+}
+function saveLocal(){
+  localStorage.setItem(STORAGE_KEYS.emails, JSON.stringify(emails));
+  localStorage.setItem(STORAGE_KEYS.customGroups, JSON.stringify(customGroups));
+  // Remove disallowed base groups entirely
+  Object.keys(base).forEach(g=>{ if(!isAllowedGroup(g)) delete base[g]; });
+
+  localStorage.setItem(STORAGE_KEYS.overrides, JSON.stringify(groupOverrides));
+  localStorage.setItem(STORAGE_KEYS.equipment, JSON.stringify(equipmentMaster));
+  localStorage.setItem(STORAGE_KEYS.assignments, JSON.stringify(assignments));
+}
+function setLang(l){
+  LANG = l;
+  localStorage.setItem(STORAGE_KEYS.lang, l);
+  // Filter out any positions whose group is not allowed (safety against overrides)
+  Object.keys(base).forEach(g=>{
+    base[g] = base[g].filter(p=>isAllowedPosition(p));
+  });
+
+  applyI18n();
+  renderRecipients();
+  renderGroups();
+  renderAdmin();
+}
+
+function buildAllPositionsList(){
+  return Object.values(positionsData).flat();
+}
+
+function getGroupsWithPositions(filterTerm=""){ // filters disallowed groups/positions
+  const term = filterTerm.trim().toLowerCase();
+  const base = JSON.parse(JSON.stringify(positionsData));
+  customGroups.forEach(g=>{ if(!base[g]) base[g]=[]; });
+  Object.entries(groupOverrides).forEach(([pos, targetGroup])=>{
+    Object.keys(base).forEach(g=>{
+    const idx = base[g].indexOf(pos);
+    if(idx>=0) base[g].splice(idx,1);
+    });
+    if(!base[targetGroup]) base[targetGroup]=[];
+    if(!base[targetGroup].includes(pos)) base[targetGroup].push(pos);
+  });
+  Object.keys(base).forEach(g=>{
+    base[g].sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+  });
+  if(term){
+    Object.keys(base).forEach(g=>{
+    base[g] = base[g].filter(p=>p.toLowerCase().includes(term));
+    });
+  }
+  const orderedKeys = Object.keys(base).sort((a,b)=>{
+    const aAlpha = /^[A-Z]+$/.test(a);
+    const bAlpha = /^[A-Z]+$/.test(b);
+    if(aAlpha && bAlpha) return a.localeCompare(b);
+    if(aAlpha && !bAlpha) return -1;
+    if(!aAlpha && bAlpha) return 1;
+    return a.localeCompare(b);
+  });
+  const result = {};
+  orderedKeys.forEach(k=>{
+    if(base[k] && base[k].length) result[k]=base[k];
+  });
+  return result;
+}
+
+function renderRecipients(){
+  const wrap = qs("#recipientChips");
+  wrap.innerHTML="";
+  DEFAULT_RECIPIENTS.forEach(name=>{
+    const el = document.createElement("button");
+    el.className = "chip";
+    el.textContent = name;
+    el.title = (emails[name]?.length? emails[name].join(", "): "");
+    if(selectedRecipients.has(name)) el.classList.add("active");
+    el.addEventListener("click",()=>{
+    if(selectedRecipients.has(name)) selectedRecipients.delete(name);
+    else selectedRecipients.add(name);
+    renderRecipients();
+    });
+    wrap.appendChild(el);
+  });
+}
+
+function renderGroups(){
+  const groupsEl = qs("#groups");
+  groupsEl.innerHTML="";
+  const filterTerm = qs("#search").value || "";
+  const groups = getGroupsWithPositions(filterTerm);
+
+  Object.entries(groups).forEach(([groupName, items])=>{
+    const group = document.createElement("div");
+    group.className = "group";
+    const header = document.createElement("div");
+    header.className = "group-header";
+    header.innerHTML = `<span>${groupName}</span><span>${items.length}</span>`;
+    const body = document.createElement("div");
+    body.className = "group-body";
+
+    items.forEach(pos=>{
+    const btn = document.createElement("button");
+    btn.className = "pos-btn";
+    btn.textContent = pos;
+    if(selectedPositions.has(pos)) btn.classList.add("selected");
+    btn.addEventListener("click",()=>{
+    // Einzelklick öffnet Popup und selektiert
+    if(!selectedPositions.has(pos)) selectedPositions.add(pos);
+    updateSelectedCount();
+    renderGroups(); // aktualisiert Selected-Style
+    openAssignModal(pos);
+    });
+    body.appendChild(btn);
+    });
+
+    group.appendChild(header);
+    group.appendChild(body);
+    groupsEl.appendChild(group);
+  });
+
+  populateMoveToolOptions();
+}
+
+function updateSelectedCount(){
+  qs("#selectedCount").textContent = String(selectedPositions.size);
+}
+
+function handleSelectAll(){
+  const filterTerm = qs("#search").value || "";
+  const groups = getGroupsWithPositions(filterTerm);
+  Object.values(groups).flat().forEach(p=>selectedPositions.add(p));
+  renderGroups();
+  updateSelectedCount();
+}
+function handleClearAll(){
+  selectedPositions.clear();
+  renderGroups();
+  updateSelectedCount();
+}
+
+function openAdmin(){ qs("#adminDrawer").classList.add("open"); qs("#backdrop").classList.add("open"); renderAdmin(); }
+function closeAdmin(){ qs("#adminDrawer").classList.remove("open"); qs("#backdrop").classList.remove("open"); }
+
+function renderAdmin(){
+  const grid = qs("#emailGrid");
+  grid.innerHTML="";
+  DEFAULT_RECIPIENTS.forEach(rec=>{
+    const card = document.createElement("div");
+    card.className = "email-card";
+    const title = document.createElement("h6");
+    title.textContent = rec;
+    const list = document.createElement("div");
+    list.className = "email-list";
+    (emails[rec]||[]).forEach((addr, idx)=>{
+    const pill = document.createElement("span");
+    pill.className = "email-pill";
+    pill.innerHTML = `<span>${addr}</span>`;
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.title = "Remove";
+    del.addEventListener("click",()=>{
+    emails[rec].splice(idx,1);
+    saveLocal(); renderAdmin();
+    });
+    pill.appendChild(del);
+    list.appendChild(pill);
+    });
+
+    const row = document.createElement("div");
+    row.style.display="flex"; row.style.gap="8px"; row.style.marginTop="6px";
+    const input = document.createElement("input");
+    input.type="email"; input.placeholder="name@example.com";
+    const addBtn = document.createElement("button");
+    addBtn.className="btn small"; addBtn.textContent="+";
+    addBtn.addEventListener("click",()=>{
+    const val = input.value.trim();
+    if(val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){
+    emails[rec] = emails[rec] || [];
+    if(!emails[rec].includes(val)){
+    emails[rec].push(val);
+    saveLocal(); renderAdmin();
+    input.value="";
+    }
+    }
+    });
+
+    row.appendChild(input); row.appendChild(addBtn);
+    card.appendChild(title); card.appendChild(list); card.appendChild(row);
+    grid.appendChild(card);
+  });
+
+  // Equipment Master List
+  const elist = qs("#equipmentList");
+  elist.innerHTML = "";
+  equipmentMaster.forEach((eq, idx)=>{
+    const pill = document.createElement("span");
+    pill.className = "email-pill";
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = eq;
+    const renameBtn = document.createElement("button");
+    renameBtn.textContent = "✎";
+    renameBtn.title = "Umbenennen";
+    renameBtn.addEventListener("click", ()=>{
+    const nv = prompt("Neuer Name:", eq);
+    if(!nv) return;
+    nv = nv.trim();
+    if(!nv) return;
+    if(equipmentMaster.includes(nv)) return alert("Name existiert bereits.");
+    // Rename in master
+    const old = equipmentMaster[idx];
+    equipmentMaster[idx] = nv;
+    // Cascade rename in assignments
+    Object.values(assignments).forEach(perRec=>{
+    Object.values(perRec).forEach(list=>{
+    list.forEach(item=>{
+    if(item.equipment === old) item.equipment = nv;
+    });
+    });
+    });
+    saveLocal();
+    renderAdmin();
+    });
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.title = "Löschen";
+    del.addEventListener("click",()=>{
+    const name = equipmentMaster[idx];
+    if(!confirm(`"${name}" löschen?`)) return;
+    // Entferne auch alle Einträge mit diesem Equipment
+    Object.keys(assignments).forEach(pos=>{
+    Object.keys(assignments[pos]||{}).forEach(rec=>{
+    assignments[pos][rec] = (assignments[pos][rec]||[]).filter(it=>it.equipment!==name);
+    if(assignments[pos][rec].length===0) delete assignments[pos][rec];
+    });
+    if(Object.keys(assignments[pos]||{}).length===0) delete assignments[pos];
+    });
+    equipmentMaster.splice(idx,1);
+    saveLocal();
+    renderAdmin();
+    });
+    pill.appendChild(nameSpan);
+    pill.appendChild(renameBtn);
+    pill.appendChild(del);
+    elist.appendChild(pill);
+  });
+
+  qs("#addEquipmentBtn").onclick = ()=>{
+    const input = qs("#newEquipmentName");
+    let name = (input.value||"").trim();
+    if(!name) return;
+    if(equipmentMaster.includes(name)) { alert("Bereits vorhanden."); return; }
+    equipmentMaster.push(name);
+    input.value="";
+    saveLocal(); renderAdmin();
+  };
+
+  const cg = qs("#customGroups");
+  cg.innerHTML="";
+  customGroups.forEach((g,i)=>{
+  // Only show allowed target groups for moves
+  const baseGroups = Object.keys(positionsData).filter(isAllowedGroup);
+
+    const pill = document.createElement("div");
+    pill.className="cg-pill";
+    pill.innerHTML = `<span>${g}</span>`;
+    const del = document.createElement("button");
+    del.textContent="✕";
+    del.addEventListener("click",()=>{
+    customGroups.splice(i,1);
+    Object.keys(groupOverrides).forEach(pos=>{
+    if(groupOverrides[pos]===g) delete groupOverrides[pos];
+    });
+    saveLocal();
+    renderAdmin(); renderGroups();
+    });
+    pill.appendChild(del);
+    cg.appendChild(pill);
+  });
+
+  populateMoveToolOptions();
+}
+
+function populateMoveToolOptions(){
+  const posSel = qs("#movePosition");
+  const tgtSel = qs("#moveTargetGroup");
+  if(!posSel || !tgtSel) return;
+
+  const allPositions = buildAllPositionsList().sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  posSel.innerHTML = allPositions.map(p=>`<option value="${p}">${p}</option>`).join("");
+
+  const baseGroups = Object.keys(positionsData);
+  const allGroups = [...new Set([...baseGroups, ...customGroups])].sort((a,b)=>a.localeCompare(b));
+  tgtSel.innerHTML = allGroups.map(g=>`<option value="${g}">${g}</option>`).join("");
+}
+
+function addCustomGroup(){
+  const name = qs("#newGroupName").value.trim();
+  if(!name) return;
+  if(Object.keys(positionsData).includes(name) || customGroups.includes(name)){
+    alert("Gruppe existiert bereits.");
+    return;
+  }
+  customGroups.push(name);
+  qs("#newGroupName").value = "";
+  saveLocal();
+  renderAdmin(); renderGroups();
+}
+
+function movePositionToGroup(){
+  const pos = qs("#movePosition").value;
+  const target = qs("#moveTargetGroup").value;
+  if(!pos || !target) return;
+  groupOverrides[pos] = target;
+  saveLocal();
+  renderGroups();
+}
+
+function resetData(){
+  if(!confirm(t("resetWarn1"))) return;
+  if(!confirm(t("resetWarn2"))) return;
+  localStorage.removeItem(STORAGE_KEYS.emails);
+  localStorage.removeItem(STORAGE_KEYS.customGroups);
+  localStorage.removeItem(STORAGE_KEYS.overrides);
+  localStorage.removeItem(STORAGE_KEYS.equipment);
+  localStorage.removeItem(STORAGE_KEYS.assignments);
+  loadLocal(); renderAdmin(); renderGroups();
+}
+
+/* ---- Assignments Modal ---- */
+let assignCurrentPos = null;
+
+function openAssignModal(pos){
+  assignCurrentPos = pos;
+  qs("#assignPosBadge").textContent = `POS ${pos}`;
+  refreshAssignEquipmentOptions();
+  renderAssignTable();
+  qs("#assignModal").classList.add("open");
+  qs("#backdrop").classList.add("open");
+}
+function closeAssignModal(){
+  assignCurrentPos = null;
+  qs("#assignModal").classList.remove("open");
+  qs("#backdrop").classList.remove("open");
+}
+
+function refreshAssignEquipmentOptions(){
+  const sel = qs("#assignEquipment");
+  const opts = equipmentMaster.slice().sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${n}">${n}</option>`).join("");
+  sel.innerHTML = opts || `<option value="" disabled>(kein Equipment definiert)</option>`;
+}
+
+function renderAssignTable(){
+  const tbody = qs("#assignTable tbody");
+  tbody.innerHTML = "";
+  if(!assignCurrentPos) return;
+  const perRec = assignments[assignCurrentPos] || {};
+  const rows = [];
+  for(const rec of DEFAULT_RECIPIENTS){
+    const list = perRec[rec] || [];
+    list.forEach((item, idx)=>{
+    const tr = document.createElement("tr");
+    const tdPos = document.createElement("td"); tdPos.textContent = assignCurrentPos;
+    const tdRec = document.createElement("td"); tdRec.textContent = rec;
+    const tdEq = document.createElement("td"); tdEq.textContent = item.equipment;
+    const tdPr = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = "badge " + item.priority;
+    badge.textContent = tPriority(item.priority);
+    tdPr.appendChild(badge);
+    const tdDel = document.createElement("td");
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn small ghost";
+    delBtn.textContent = "✕";
+    delBtn.title = "Löschen";
+    delBtn.addEventListener("click", ()=>{
+    perRec[rec].splice(idx,1);
+    if(perRec[rec].length===0) delete perRec[rec];
+    if(Object.keys(perRec).length===0) delete assignments[assignCurrentPos];
+    else assignments[assignCurrentPos] = perRec;
+    saveLocal();
+    renderAssignTable();
+    });
+    tdDel.appendChild(delBtn);
+    tr.appendChild(tdPos); tr.appendChild(tdRec); tr.appendChild(tdEq); tr.appendChild(tdPr); tr.appendChild(tdDel);
+    rows.push(tr);
+    });
+  }
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
+function addAssignment(){
+  if(!assignCurrentPos) return;
+  const rec = qs("#assignRecipient").value;
+  const eq = qs("#assignEquipment").value;
+  const pr = qs("#assignPriority").value; // mod | asap | urgent | immediate
+  if(!eq){ alert("Bitte Equipment definieren (Admin → Equipment-Liste)."); return; }
+  assignments[assignCurrentPos] = assignments[assignCurrentPos] || {};
+  assignments[assignCurrentPos][rec] = assignments[assignCurrentPos][rec] || [];
+  assignments[assignCurrentPos][rec].push({equipment:eq, priority:pr});
+  saveLocal();
+  renderAssignTable();
+}
+
+/* ---- Mail building ---- */
+function priorityPlain(code){
+  switch(code){
+    case "immediate": return "!!! SOFORT";
+    case "urgent": return "!! DRINGEND";
+    case "asap": return "[ASAP]";
+    case "mod":
+    default: return "Moderat";
+  }
+}
+
+function buildPlainTableRows(filterRecipient=null){
+  // Returns array of strings "POS; Adressat; Equipment; Dringlichkeit"
+  const rows = [];
+  const positions = [...selectedPositions].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  positions.forEach(pos=>{
+    const perRec = assignments[pos] || {};
+    const recs = DEFAULT_RECIPIENTS.filter(r=>perRec[r]?.length);
+    recs.forEach(rec=>{
+    if(filterRecipient && rec !== filterRecipient) return;
+    perRec[rec].forEach(item=>{
+    rows.push(`${pos}; ${rec}; ${item.equipment}; ${priorityPlain(item.priority)}`);
+    });
+    });
+  });
+  return rows;
+}
+
+function buildMailBodyPlain(){
+  // Header + Table as plaintext
+  const headerDE = t("mailBodyPrefix");
+  const headerEN = STR.en.mailBodyPrefix;
+  const rows = buildPlainTableRows();
+  const table = rows.length
+    ? ["\nPOS; Adressat; Equipment; Dringlichkeit", ...rows].join("\n")
+    : "\n(keine Einträge erfasst)";
+  const footerDE = t("mailBodySuffix");
+  const footerEN = STR.en.mailBodySuffix;
+  return `${headerDE}\n${table}\n${footerDE}\n\n---\n\n${headerEN}\n${table}\n${footerEN}`;
+}
+
+function buildMailBodyPlainPerRecipient(rec){
+  const headerDE = t("mailBodyPrefix");
+  const headerEN = STR.en.mailBodyPrefix;
+  const rows = buildPlainTableRows(rec);
+  const table = rows.length
+    ? ["\nPOS; Adressat; Equipment; Dringlichkeit", ...rows].join("\n")
+    : "\n(keine Einträge erfasst)";
+  const footerDE = t("mailBodySuffix");
+  const footerEN = STR.en.mailBodySuffix;
+  return `${headerDE}\n${table}\n${footerDE}\n\n---\n\n${headerEN}\n${table}\n${footerEN}`;
+}
+
+function buildMailto(toList, bodyText){
+  const subject = encodeURIComponent(t("mailSubject"));
+  const body = encodeURIComponent(bodyText);
+  const to = encodeURIComponent(toList.join(";"));
+  return `mailto:${to}?subject=${subject}&body=${body}`;
+}
+
+/* Optional HTML Preview (for PDF print) */
+function openPreview(){
+  const positions = [...selectedPositions].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const rows = [];
+  positions.forEach(pos=>{
+    const perRec = assignments[pos] || {};
+    DEFAULT_RECIPIENTS.forEach(rec=>{
+    (perRec[rec]||[]).forEach(item=>{
+    rows.push({pos,rec,eq:item.equipment,pr:item.priority});
+    });
+    });
+  });
+  const style = `
+    body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#0b0e13;padding:24px;}
+    h1{margin:0 0 8px} .muted{color:#586173}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border:1px solid #cdd6e4;padding:8px 10px;text-align:left}
+    th{background:#f5f7fb}
+    .cell.mod{background:#e7f1ff}
+    .cell.asap{background:#fff3c4}
+    .cell.urgent{background:#ffe1c4}
+    .cell.immediate{background:#ffd6d8}
+    .small{font-size:12px;color:#586173}
+  `;
+  const html = `
+    <html><head><meta charset="utf-8"><title>UPR Vorschau</title><style>${style}</style></head>
+    <body>
+    <h1>Auftragsübersicht</h1>
+    <div class="muted">Generiert von UPR – ${new Date().toLocaleString()}</div>
+    <table>
+    <thead><tr><th>POS</th><th>Adressat</th><th>Equipment</th><th>Dringlichkeit</th></tr></thead>
+    <tbody>
+    ${rows.map(r=>`
+    <tr>
+    <td>${r.pos}</td>
+    <td>${r.rec}</td>
+    <td>${r.eq}</td>
+    <td class="cell ${r.pr}">${tPriority(r.pr)}</td>
+    </tr>`).join("")}
+    </tbody>
+    </table>
+    <p class="small">Hinweis: Für die E-Mail wird eine Plaintext-Tabelle genutzt. Diese Vorschau kann als PDF gedruckt und angehängt werden.</p>
+    </body></html>
+  `;
+  const w = window.open("", "_blank");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+/* ---- Existing compose flow extended ---- */
+function composeEmail(){
+  const sendMode = qs("#sendMode").value; // combined | perRecipient
+  // Resolve To recipients from selected chips
+  const recList = [...selectedRecipients].map(r=>emails[r]||[]).flat();
+  const uniqRecipients = [...new Set(recList)];
+  if(uniqRecipients.length===0){
+    alert(t("alertNoRecipients"));
+    return;
+  }
+  if(selectedPositions.size===0){
+    alert(t("alertNoPositions"));
+    return;
+  }
+
+  if (sendMode === "perRecipient"){
+    // Open one mail per selected recipient (with their own table rows)
+    const selectedRecips = [...selectedRecipients];
+    selectedRecips.forEach(rec=>{
+    const toList = emails[rec] || [];
+    if(!toList.length) return;
+    const body = buildMailBodyPlainPerRecipient(rec);
+    const url = buildMailto(toList, body);
+    window.open(url, "_blank"); // open each mailto in new window/tab
+    });
+  } else {
+    const body = buildMailBodyPlain();
+    const url = buildMailto(uniqRecipients, body);
+    window.location.href = url;
+  }
+}
+
+/* ---- Wiring ---- */
+document.addEventListener("DOMContentLoaded", ()=>{
+  loadLocal();
+  applyI18n();
+
+  qs("#lang-de").addEventListener("click", ()=>setLang("de"));
+  qs("#lang-en").addEventListener("click", ()=>setLang("en"));
+
+  renderRecipients();
+  renderGroups();
+  updateSelectedCount();
+
+  qs("#selectAll").addEventListener("click", handleSelectAll);
+  qs("#clearAll").addEventListener("click", handleClearAll);
+  qs("#search").addEventListener("input", ()=>renderGroups());
+  qs("#composeBtn").addEventListener("click", composeEmail);
+  qs("#previewBtn").addEventListener("click", openPreview);
+
+  qs("#adminBtn").addEventListener("click", openAdmin);
+  qs("#closeAdmin").addEventListener("click", closeAdmin);
+  qs("#backdrop").addEventListener("click", ()=>{
+    // closes admin or assign modal
+    closeAdmin();
+    closeAssignModal();
+  });
+  qs("#addGroupBtn").addEventListener("click", addCustomGroup);
+  qs("#moveBtn").addEventListener("click", movePositionToGroup);
+  qs("#resetData").addEventListener("click", resetData);
+
+  // Assign modal
+  qs("#closeAssignModal").addEventListener("click", closeAssignModal);
+  qs("#assignAddBtn").addEventListener("click", addAssignment);
+});
+  </script>
+</body>
+</html>

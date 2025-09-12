@@ -1,0 +1,114 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["fetch"]
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["query", "execute", "list_tables", "describe_table"]
+    },
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["search_aws_docs"]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["@brave/brave-search-mcp-server", "--transport", "stdio"],
+      "env": {
+        "BRAVE_API_KEY": "BSArYfvvgbYLQzS0gcD7XuqOr9fT4F-",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "brave_web_search",
+        "brave_local_search", 
+        "brave_image_search",
+        "brave_video_search"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "create_or_update_file",
+        "create_repository", 
+        "create_issue",
+        "create_pull_request",
+        "fork_repository",
+        "get_file_contents",
+        "get_issue",
+        "get_pull_request",
+        "get_repository",
+        "list_issues",
+        "list_pull_requests",
+        "list_repositories",
+        "search_repositories",
+        "update_issue",
+        "push_files"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-memory"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "create_entities",
+        "create_relations",
+        "add_observations",
+        "delete_entities",
+        "delete_observations",
+        "delete_relations",
+        "read_graph",
+        "search_nodes",
+        "open_nodes"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-sequential-thinking"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "sequentialthinking"
+      ]
+    },
+    "duckduckgo": {
+      "command": "npx",
+      "args": ["duckduckgo-mcp-server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "duckduckgo_search",
+        "duckduckgo_news"
+      ]
+    }
+  }
+}
