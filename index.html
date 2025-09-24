@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlightStat Bot - Live Flight Monitor</title>
+    <style>
+        /* FlightStat Bot - GitHub Pages Optimized */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+        
+        .header-section {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-secondary {
+            background-color: #666;
+            color: white;
+        }
+        
+        .airport-selection input {
+            padding: 8px 12px;
+            border: 2px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: white;
+            font-size: 14px;
+            width: 120px;
+            text-transform: uppercase;
+        }
+        
+        .airport-selection input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .main-content {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .flight-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .flight-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .flight-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #444;
+            color: #ddd;
+            font-size: 13px;
+        }
+        
+        .flight-number {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status.scheduled { background: #3498db; color: white; }
+        .status.boarding { background: #f39c12; color: white; }
+        .status.departed { background: #4CAF50; color: white; }
+        .status.delayed { background: #e74c3c; color: white; }
+        
+        .debug-console {
+            background-color: #1a1a1a;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .debug-header {
+            background-color: #4CAF50;
+            color: #000;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .debug-log {
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .debug-entry {
+            margin-bottom: 8px;
+            padding: 5px 8px;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .debug-entry.error {
+            border-left-color: #f44336;
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+        
+        .debug-entry.success {
+            border-left-color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+            display: block;
+        }
+        
+        .status-message.error {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+            border: 1px solid #F44336;
+            display: block;
+        }
+        
+        .no-flights {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛫 FlightStat Bot - Live Flight Monitor</h1>
+        
+        <div class="header-section">
+            <div class="controls">
+                <div class="airport-selection">
+                    <label for="airport-input">Airport:</label>
+                    <input type="text" id="airport-input" placeholder="EDDF" maxlength="4">
+                </div>
+                <button id="search-btn" class="btn btn-primary">🔍 Search Flights</button>
+                <button id="debug-btn" class="btn btn-secondary">🔍 Debug</button>
+                <button id="settings-btn" class="btn btn-secondary">⚙️ Settings</button>
+            </div>
+        </div>
+        
+        <div id="debug-console" class="debug-console">
+            <div class="debug-header">
+                <h4>🔍 Debug Console</h4>
+                <button id="clear-debug-btn" class="btn btn-secondary btn-small">Clear</button>
+            </div>
+            <div id="debug-log" class="debug-log"></div>
+        </div>
+        
+        <div class="main-content">
+            <div id="flight-results">
+                <div class="no-flights">
+                    Enter an airport code and click "Search Flights" to see arrivals
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Settings</h3>
+                <button id="close-settings-btn" class="btn btn-secondary">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-key-input">FlightAware API Key:</label>
+                    <input type="password" id="api-key-input" class="form-input" 
+                           placeholder="Enter your FlightAware API Key">
+                    <small style="color: #999; font-size: 12px;">
+                        Get your free API key at: flightaware.com/commercial/aeroapi/
+                    </small>
+                </div>
+                <button id="save-api-key-btn" class="btn btn-primary">💾 Save API Key</button>
+                <div id="api-key-status" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🚀 FlightStat Bot - GitHub Pages Optimized Version
+        class FlightStatBot {
+            constructor() {
+                this.apiKey = localStorage.getItem('flightaware_api_key') || '';
+                this.baseUrl = 'https://aeroapi.flightaware.com/aeroapi';
+                this.init();
+            }
+            
+            init() {
+                console.log('🚀 FlightStat Bot - GitHub Pages Version');
+                console.log('✅ Direct API calls enabled (HTTPS environment)');
+                
+                // Event listeners
+                document.getElementById('search-btn').addEventListener('click', () => this.searchFlights());
+                document.getElementById('debug-btn').addEventListener('click', () => this.toggleDebug());
+                document.getElementById('settings-btn').addEventListener('click', () => this.openSettings());
+                document.getElementById('clear-debug-btn').addEventListener('click', () => this.clearDebug());
+                document.getElementById('close-settings-btn').addEventListener('click', () => this.closeSettings());
+                document.getElementById('save-api-key-btn').addEventListener('click', () => this.saveApiKey());
+                
+                // Enter key support
+                document.getElementById('airport-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.searchFlights();
+                });
+                
+                this.logToDebug('FlightStat Bot initialized - GitHub Pages version', 'success');
+            }
+            
+            async searchFlights() {
+                const airportCode = document.getElementById('airport-input').value.trim().toUpperCase();
+                
+                if (!airportCode) {
+                    this.logToDebug('Please enter an airport code', 'error');
+                    return;
+                }
+                
+                if (!this.apiKey) {
+                    this.logToDebug('Please configure your FlightAware API key in Settings', 'error');
+                    return;
+                }
+                
+                this.logToDebug(`🛫 Searching arrivals for ${airportCode}...`, 'info');
+                
+                try {
+                    const url = `${this.baseUrl}/airports/${airportCode}/flights/arrivals`;
+                    this.logToDebug(`📡 API Request: ${url}`, 'info');
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'x-apikey': this.apiKey,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    this.logToDebug(`📊 Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${errorData.title || response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.logToDebug(`✅ API Success: Found ${data.arrivals?.length || 0} arrivals`, 'success');
+                    
+                    this.displayFlights(data.arrivals || [], airportCode);
+                    
+                } catch (error) {
+                    this.logToDebug(`❌ Error: ${error.message}`, 'error');
+                    this.showError(error.message);
+                }
+            }
+            
+            displayFlights(flights, airport) {
+                const resultsDiv = document.getElementById('flight-results');
+                
+                if (!flights || flights.length === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="no-flights">
+                            No arrivals found for ${airport}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let tableHtml = `
+                    <h2>✈️ Arrivals for ${airport}</h2>
+                    <table class="flight-table">
+                        <thead>
+                            <tr>
+                                <th>Flight</th>
+                                <th>Airline</th>
+                                <th>Origin</th>
+                                <th>Scheduled</th>
+                                <th>Estimated</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                flights.forEach(flight => {
+                    const flightNumber = flight.ident || 'N/A';
+                    const airline = flight.operator || 'N/A';
+                    const origin = flight.origin?.code_iata || flight.origin?.code_icao || 'N/A';
+                    const scheduled = this.formatTime(flight.scheduled_in);
+                    const estimated = this.formatTime(flight.estimated_in);
+                    const status = this.getFlightStatus(flight);
+                    
+                    tableHtml += `
+                        <tr>
+                            <td><span class="flight-number">${flightNumber}</span></td>
+                            <td>${airline}</td>
+                            <td>${origin}</td>
+                            <td>${scheduled}</td>
+                            <td>${estimated}</td>
+                            <td><span class="status ${status.class}">${status.text}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += '</tbody></table>';
+                resultsDiv.innerHTML = tableHtml;
+                
+                this.logToDebug(`📊 Displayed ${flights.length} flights in table`, 'success');
+            }
+            
+            formatTime(timestamp) {
+                if (!timestamp) return 'N/A';
+                
+                try {
+                    const date = new Date(timestamp);
+                    return date.toLocaleTimeString('de-DE', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                } catch (e) {
+                    return 'N/A';
+                }
+            }
+            
+            getFlightStatus(flight) {
+                if (flight.status === 'Arrived') {
+                    return { text: 'Arrived', class: 'departed' };
+                } else if (flight.status === 'En Route') {
+                    return { text: 'En Route', class: 'boarding' };
+                } else if (flight.status === 'Scheduled') {
+                    return { text: 'Scheduled', class: 'scheduled' };
+                } else if (flight.status === 'Delayed') {
+                    return { text: 'Delayed', class: 'delayed' };
+                } else {
+                    return { text: flight.status || 'Unknown', class: 'scheduled' };
+                }
+            }
+            
+            showError(message) {
+                const resultsDiv = document.getElementById('flight-results');
+                resultsDiv.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error</h3>
+                        <p>${message}</p>
+                        <button class="btn btn-primary" onclick="location.reload()">🔄 Retry</button>
+                    </div>
+                `;
+            }
+            
+            toggleDebug() {
+                const debugConsole = document.getElementById('debug-console');
+                if (debugConsole.style.display === 'none' || !debugConsole.style.display) {
+                    debugConsole.style.display = 'block';
+                    this.logToDebug('Debug console opened', 'success');
+                } else {
+                    debugConsole.style.display = 'none';
+                }
+            }
+            
+            clearDebug() {
+                document.getElementById('debug-log').innerHTML = '';
+                this.logToDebug('Debug log cleared', 'success');
+            }
+            
+            logToDebug(message, type = 'info') {
+                const debugLog = document.getElementById('debug-log');
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = `debug-entry ${type}`;
+                entry.innerHTML = `[${timestamp}] ${message}`;
+                debugLog.appendChild(entry);
+                debugLog.scrollTop = debugLog.scrollHeight;
+                
+                console.log(`[${timestamp}] ${message}`);
+            }
+            
+            openSettings() {
+                document.getElementById('settings-modal').style.display = 'flex';
+                
+                // Load saved API key (masked)
+                const apiKeyInput = document.getElementById('api-key-input');
+                if (this.apiKey) {
+                    apiKeyInput.value = '••••••••••••••••••••' + this.apiKey.slice(-4);
+                    apiKeyInput.setAttribute('data-masked', 'true');
+                }
+            }
+            
+            closeSettings() {
+                document.getElementById('settings-modal').style.display = 'none';
+            }
+            
+            saveApiKey() {
+                const apiKeyInput = document.getElementById('api-key-input');
+                const statusDiv = document.getElementById('api-key-status');
+                
+                let apiKey = apiKeyInput.value.trim();
+                
+                // If masked, don't save
+                if (apiKeyInput.getAttribute('data-masked') === 'true' && apiKey.startsWith('••••')) {
+                    statusDiv.innerHTML = '<span style="color: #FF9800;">No changes made to API key</span>';
+                    statusDiv.className = 'status-message';
+                    statusDiv.style.display = 'block';
+                    return;
+                }
+                
+                if (!apiKey) {
+                    statusDiv.innerHTML = '<span style="color: #F44336;">Please enter an API key</span>';
+                    statusDiv.className = 'status-message error';
+                    return;
+                }
+                
+                // Save API key
+                localStorage.setItem('flightaware_api_key', apiKey);
+                this.apiKey = apiKey;
+                
+                statusDiv.innerHTML = '<span style="color: #4CAF50;">✅ API key saved successfully</span>';
+                statusDiv.className = 'status-message success';
+                
+                this.logToDebug('API key updated', 'success');
+                
+                // Clear input for security
+                setTimeout(() => {
+                    apiKeyInput.value = '••••••••••••••••••••' + apiKey.slice(-4);
+                    apiKeyInput.setAttribute('data-masked', 'true');
+                }, 2000);
+            }
+        }
+        
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new FlightStatBot();
+        });
+        
+        // Handle API key input focus (unmask)
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKeyInput = document.getElementById('api-key-input');
+            apiKeyInput.addEventListener('focus', function() {
+                if (this.getAttribute('data-masked') === 'true') {
+                    this.value = '';
+                    this.removeAttribute('data-masked');
+                    this.placeholder = 'Enter new API key';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
