@@ -187,9 +187,9 @@ function FlightStatBotComponent() {
       
       // NEW: Include user ID in API request for tracking
       // CONSOLIDATED BACKEND - Next.js API Route (no external dependencies)
-      apiUrl = `/api/flights?airport=${airport}&key=${encodeURIComponent(effectiveApiKey)}&user=${encodeURIComponent(userId)}`;
+      const apiUrl = `/api/flights?airport=${airport}&key=${encodeURIComponent(effectiveApiKey)}&user=${encodeURIComponent(userId)}`;
       
-      const response = await fetch(apiUrl, { headers });
+      const response = await fetch(apiUrl);
       const data = await response.json();
 
       console.log('🔍 DETAILED API Response:', JSON.stringify(data, null, 2));
@@ -210,7 +210,7 @@ function FlightStatBotComponent() {
       if (data.success && data.flights) {
         // Railway Backend response (already processed)
         setFlights(data.flights);
-        console.log(`✅ Live data loaded: ${data.flights.length} flights from ${data.airport} via Railway Backend`);
+        console.log(`✅ Live data loaded: ${data.flights.length} flights from ${data.airport} via Next.js API`);
       } else if (data.arrivals) {
         // Direct FlightAware API response (needs processing)
         const processedFlights = data.arrivals
@@ -367,7 +367,7 @@ function FlightStatBotComponent() {
         }
       ];
       setFlights(demoFlights);
-      console.log(`✅ Demo data loaded: ${demoFlights.length} flights for ${airport} (Netlify Demo Mode)`);
+      console.log(`✅ Demo data loaded: ${demoFlights.length} flights for ${airport} (Next.js Demo Mode)`);
     } finally {
       setLoading(false);
     }
