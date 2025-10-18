@@ -20,7 +20,7 @@ import { FlightTable } from '@/components/flight/FlightTable';
 import { FlightFilters } from '@/components/flight/FlightFilters';
 import { FlightSeparator } from '@/components/flight/FlightSeparator';
 import { cn } from '@/lib/utils';
-import { securityManager } from '@/lib/security';
+// Security manager disabled for WebAuthn compatibility
 import { filterFlights, categorizeFlights, getFlightStats } from '@/lib/flightUtils';
 import type { Flight } from '@/types/flight';
 
@@ -48,8 +48,8 @@ function FlightStatBotComponent() {
     if (savedApiKey) setApiKey(savedApiKey);
     if (savedAirport) setAirport(savedAirport);
     
-    // Initialize security manager
-    setIsSecurityInitialized(true);
+    // Initialize security manager (WebAuthn disabled for compatibility)
+    setIsSecurityInitialized(false);
     
     // Load demo data on startup
     fetchFlights();
@@ -68,9 +68,7 @@ function FlightStatBotComponent() {
     };
 
     const handleUserActivity = () => {
-      if (isSecurityInitialized) {
-        securityManager.updateActivity();
-      }
+      // Security disabled for compatibility
     };
 
     // Security events
@@ -91,19 +89,15 @@ function FlightStatBotComponent() {
   }, [isSecurityInitialized]);
 
   const fetchFlights = async () => {
-    // Update security activity
-    if (isSecurityInitialized) {
-      securityManager.updateActivity();
-    }
+    // Security disabled for compatibility
     
     setLoading(true);
     setError(null);
     setApiStatus('warning');
 
-    // NEW: Multi-user support - get current user's API key and user ID
-    const currentUser = securityManager.getCurrentUser();
-    const effectiveApiKey = currentUser?.personalApiKey || apiKey;
-    const userId = currentUser?.id || 'single_user';
+    // Simplified single-user mode (multi-user disabled for compatibility)
+    const effectiveApiKey = apiKey;
+    const userId = 'single_user';
 
     try {
       // If no API key, show demo data with helpful message
@@ -257,10 +251,7 @@ function FlightStatBotComponent() {
         setApiStatus('active');
         setError(null);
         
-        // NEW: Track API usage for multi-user compliance
-        if (isSecurityInitialized && currentUser) {
-          securityManager.trackApiUsage(currentUser.id, 1);
-        }
+        // API usage tracking disabled for compatibility
         
         // Show success message if we got live data
         if (processedFlights.length > 0) {
@@ -381,11 +372,6 @@ function FlightStatBotComponent() {
   };
 
   const toggleMonitor = (flightId: string) => {
-    // Update security activity
-    if (isSecurityInitialized) {
-      securityManager.updateActivity();
-    }
-    
     setFlights(prev => prev.map(flight => 
       (flight.id || flight.ident) === flightId 
         ? { ...flight, isMonitored: !flight.isMonitored }
@@ -502,7 +488,7 @@ function FlightStatBotComponent() {
               <Button
                 onClick={fetchFlights}
                 loading={loading}
-                disabled={!(securityManager.getCurrentUser()?.personalApiKey || apiKey).trim()}
+                disabled={!apiKey.trim()}
                 className="flex items-center gap-2"
               >
                 <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
