@@ -186,15 +186,8 @@ function FlightStatBotComponent() {
       console.log(`Fetching flights for ${airport} with API key: ${effectiveApiKey.substring(0, 8)}... (User: ${userId})`);
       
       // NEW: Include user ID in API request for tracking
-      // Smart API routing: Railway Backend → FlightAware API → Local fallback → Demo data
-      let apiUrl;
-      let headers = {};
-      
-      // DIRECT RAILWAY BACKEND - Vercel Rewrites don't work with Static Export
-      const railwayBackend = 'https://flightstat-backend-production-6af6.up.railway.app';
-      
-      // Direct Railway API call (CORS configured for Vercel domain)
-      apiUrl = `${railwayBackend}/api/flights?airport=${airport}&user=${encodeURIComponent(userId)}`;
+      // CONSOLIDATED BACKEND - Next.js API Route (no external dependencies)
+      apiUrl = `/api/flights?airport=${airport}&key=${encodeURIComponent(effectiveApiKey)}&user=${encodeURIComponent(userId)}`;
       
       const response = await fetch(apiUrl, { headers });
       const data = await response.json();
