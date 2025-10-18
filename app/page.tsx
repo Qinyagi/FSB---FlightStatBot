@@ -186,10 +186,17 @@ function FlightStatBotComponent() {
       console.log(`Fetching flights for ${airport} with API key: ${effectiveApiKey.substring(0, 8)}... (User: ${userId})`);
       
       // NEW: Include user ID in API request for tracking
-      // CONSOLIDATED BACKEND - Next.js API Route (no external dependencies)
+      // CONSOLIDATED BACKEND - Next.js API Route with Vercel fallback
       const apiUrl = `/api/flights?airport=${airport}&key=${encodeURIComponent(effectiveApiKey)}&user=${encodeURIComponent(userId)}`;
       
       const response = await fetch(apiUrl);
+      
+      // Check if response is valid JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API returned non-JSON response');
+      }
+      
       const data = await response.json();
 
       console.log('🔍 DETAILED API Response:', JSON.stringify(data, null, 2));
