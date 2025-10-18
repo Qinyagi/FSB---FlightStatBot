@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Static export for Vercel deployment (API routes work in serverless)
-  output: 'export',
+  // Full-stack deployment with API routes (no static export)
   trailingSlash: true,
-  distDir: 'out',
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
